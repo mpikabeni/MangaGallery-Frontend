@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Nexa">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#7C5CFF"/><stop offset="1" stop-color="#22D3EE"/>
+    </linearGradient>
+    <linearGradient id="s" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity=".38"/><stop offset="1" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+    <clipPath id="c"><rect width="512" height="512" rx="116"/></clipPath>
+  </defs>
+  <rect width="512" height="512" rx="116" fill="url(#g)"/>
+  <path clip-path="url(#c)" d="M0 0h512v236C392 190 168 224 0 150z" fill="url(#s)"/>
+  <path d="M146 372V140h58l110 154V140h52v232h-58L198 218v154z" fill="#fff"/>
+  <path d="M388 92l9 21 21 9-21 9-9 21-9-21-21-9 21-9z" fill="#fff" opacity=".95"/>
+</svg>
