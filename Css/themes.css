@@ -1,0 +1,38 @@
+/* Nexa Manga - themes. Change the look by switching [data-theme] on <html>. */
+:root,
+[data-theme="nexa"] {
+  color-scheme: dark;
+  --bg: #0b0b14; --surface: #14141f; --elev: #1c1c2b; --text: #f3f4fa; --muted: #9aa0b5;
+  --line: rgba(255,255,255,.08); --accent: #7c5cff; --accent-2: #22d3ee; --on-accent: #fff;
+  --danger: #ff5d6c; --ok: #34d399; --shadow: 0 10px 30px rgba(0,0,0,.45);
+}
+[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f4f5fb; --surface: #ffffff; --elev: #ffffff; --text: #14151f; --muted: #61667a;
+  --line: rgba(20,21,31,.09); --accent: #6246ea; --accent-2: #0ea5c6; --on-accent: #fff;
+  --danger: #e11d48; --ok: #059669; --shadow: 0 8px 24px rgba(40,40,90,.12);
+}
+[data-theme="amoled"] {
+  color-scheme: dark;
+  --bg: #000; --surface: #0a0a0a; --elev: #151515; --text: #f5f5f7; --muted: #8e8e99;
+  --line: rgba(255,255,255,.09); --accent: #a78bfa; --accent-2: #38bdf8; --on-accent: #0b0b14;
+  --danger: #ff6b78; --ok: #4ade80; --shadow: none;
+}
+[data-theme="sakura"] {
+  color-scheme: light;
+  --bg: #fff3f7; --surface: #ffffff; --elev: #ffffff; --text: #2a1520; --muted: #8a6672;
+  --line: rgba(120,30,70,.10); --accent: #ec4899; --accent-2: #fb7185; --on-accent: #fff;
+  --danger: #e11d48; --ok: #059669; --shadow: 0 8px 24px rgba(190,50,110,.14);
+}
+[data-theme="ocean"] {
+  color-scheme: dark;
+  --bg: #06121f; --surface: #0c1d30; --elev: #12283f; --text: #e8f3ff; --muted: #8fa8c2;
+  --line: rgba(160,210,255,.10); --accent: #38bdf8; --accent-2: #34d399; --on-accent: #04202f;
+  --danger: #ff6b7a; --ok: #34d399; --shadow: 0 10px 30px rgba(0,10,30,.5);
+}
+[data-theme="sunset"] {
+  color-scheme: dark;
+  --bg: #140a0a; --surface: #1f1212; --elev: #2a1a18; --text: #fff1ea; --muted: #b99a90;
+  --line: rgba(255,200,170,.10); --accent: #ff7a45; --accent-2: #ffc857; --on-accent: #2a0f05;
+  --danger: #ff6b6b; --ok: #4ade80; --shadow: 0 10px 30px rgba(20,0,0,.5);
+}
