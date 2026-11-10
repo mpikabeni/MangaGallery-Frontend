@@ -1,0 +1,1 @@
+# MangaGallery-Frontend
