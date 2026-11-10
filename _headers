@@ -1,0 +1,13 @@
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: no-referrer
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+  Content-Security-Policy: frame-ancestors https://web.telegram.org https://*.telegram.org https://telegram.org
+
+/assets/*
+  Cache-Control: public, max-age=604800
+
+/js/*
+  Cache-Control: no-cache
+/css/*
+  Cache-Control: no-cache
