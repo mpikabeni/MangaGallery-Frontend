@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+name="viewport"
+content="width=device-width,initial-scale=1.0">
+
+<title>Gestion des Médias</title>
+
+<link
+rel="preconnect"
+href="https://fonts.googleapis.com">
+
+<link
+rel="preconnect"
+href="https://fonts.gstatic.com"
+crossorigin>
+
+<link
+href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap"
+rel="stylesheet">
+
+<link
+rel="stylesheet"
+href="css/dashboard.css">
+
+<link
+rel="stylesheet"
+href="css/media.css">
+
+
+
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://telegram.org; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com data:; img-src 'self' data: https: http:; connect-src 'self' https:; object-src 'none'; base-uri 'self'; form-action 'self'">
+<script src="../js/config.js"></script>
+<script src="js/safe-html.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js" defer></script>
+</head>
+
+<body>
+
+<div class="dashboard">
+
+<aside class="sidebar"></aside>
+
+<main class="main-content">
+
+<header class="topbar">
+
+<div>
+
+<h1>Gestion des Médias</h1>
+
+<p>Gérer les images, couvertures, bannières et fichiers</p>
+
+</div>
+
+<button
+id="upload-media"
+class="primary-button">
+
+<i data-lucide="upload"></i>
+
+<span>Importer un média</span>
+
+</button>
+
+</header>
+
+<section class="toolbar">
+
+<div class="search-box">
+
+<i data-lucide="search"></i>
+
+<input
+type="search"
+id="search-media"
+placeholder="Rechercher un média">
+
+</div>
+
+<select id="media-filter">
+
+<option value="">Tous les fichiers</option>
+
+<option value="cover">Couvertures</option>
+
+<option value="chapter">Pages de chapitres</option>
+
+<option value="banner">Bannières</option>
+
+<option value="other">Autres</option>
+
+</select>
+
+</section>
+
+<!--==========================
+MEDIA GRID
+===========================-->
+
+<section class="media-grid"
+
+id="media-grid">
+
+</section>
+
+<!--==========================
+MEDIA PREVIEW MODAL
+===========================-->
+
+<div
+id="media-modal"
+class="modal hidden">
+
+<div class="modal-content">
+
+<div class="modal-header">
+
+<h2 id="media-modal-title">
+
+Détails du média
+
+</h2>
+
+<button
+id="close-media-modal"
+class="icon-button">
+
+<i data-lucide="x"></i>
+
+</button>
+
+</div>
+
+<div class="media-preview">
+
+<img
+id="media-preview-image"
+alt="Prévisualisation">
+
+</div>
+
+<form id="media-form">
+
+<div class="form-group">
+
+<label for="media-name">
+
+Nom du fichier
+
+</label>
+
+<input
+type="text"
+id="media-name">
+
+</div>
+
+<div class="form-grid">
+
+<div class="form-group">
+
+<label for="media-type">
+
+Type
+
+</label>
+
+<input
+type="text"
+id="media-type"
+readonly>
+
+</div>
+
+<div class="form-group">
+
+<label for="media-size">
+
+Taille
+
+</label>
+
+<input
+type="text"
+id="media-size"
+readonly>
+
+</div>
+
+</div>
+
+<div class="form-group">
+
+<label for="media-date">
+
+Date d'ajout
+
+</label>
+
+<input
+type="text"
+id="media-date"
+readonly>
+
+</div>
+
+<div class="form-group">
+
+<label for="media-path">
+
+Chemin du fichier
+
+</label>
+
+<input
+type="text"
+id="media-path"
+readonly>
+
+</div>
+
+<div class="form-group">
+
+<label for="media-description">
+
+Description
+
+</label>
+
+<textarea
+id="media-description"
+rows="4">
+
+</textarea>
+
+</div>
+
+<div class="modal-actions">
+
+<button
+type="button"
+id="rename-media-button"
+class="secondary-button">
+
+Renommer
+
+</button>
+
+<button
+type="button"
+id="download-media-button"
+class="secondary-button">
+
+Télécharger
+
+</button>
+
+<button
+type="button"
+id="delete-media-button"
+class="secondary-button">
+
+Supprimer
+
+</button>
+
+<button
+type="button"
+id="close-media-button"
+class="primary-button">
+
+Fermer
+
+</button>
+
+</div>
+
+</form>
+
+</div>
+
+</div>
+
+</main>
+
+</div>
+
+
+
+
+
+
+
+
+
+
+<script src="js/helpers.js"></script>
+<script src="js/toast.js"></script>
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/sidebar.js"></script>
+<script src="js/media.js"></script>
+<script src="js/page-boot.js"></script>
+</body>
+
+</html>

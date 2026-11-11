@@ -1,0 +1,1088 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0">
+
+<meta http-equiv="X-UA-Compatible"
+      content="IE=edge">
+
+<meta name="description"
+      content="Paramètres Nexa Manga - Administration">
+
+<meta name="theme-color"
+      content="#7C5CFF">
+
+<title>Paramètres • Nexa Manga</title>
+
+<link rel="icon"
+      type="image/png"
+      href="assets/logo.png">
+
+<link rel="preconnect"
+      href="https://fonts.googleapis.com">
+
+<link rel="preconnect"
+      href="https://fonts.gstatic.com"
+      crossorigin>
+
+<link
+href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"
+rel="stylesheet">
+
+<link rel="stylesheet"
+      href="css/dashboard.css">
+
+<link rel="stylesheet"
+      href="css/settings.css">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://telegram.org; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com data:; img-src 'self' data: https: http:; connect-src 'self' https:; object-src 'none'; base-uri 'self'; form-action 'self'">
+<script src="../js/config.js"></script>
+<script src="js/safe-html.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js" defer></script>
+</head>
+
+<body>
+
+<div class="dashboard">
+
+<aside
+class="sidebar"
+aria-label="Navigation principale">
+
+</aside>
+
+
+<main class="main-content">
+
+<header class="topbar">
+
+<div class="page-title">
+
+<h1>
+Paramètres
+</h1>
+
+<p>
+Configurez les paramètres de votre administration Nexa Manga.
+</p>
+
+</div>
+
+<div class="topbar-actions">
+
+<button
+type="button"
+id="save-settings"
+class="primary-button">
+
+<i data-lucide="save"></i>
+
+<span>
+Enregistrer
+</span>
+
+</button>
+
+</div>
+
+</header>
+
+
+<section class="settings-layout">
+
+<nav
+class="settings-navigation"
+aria-label="Sections des paramètres">
+
+<button
+type="button"
+class="settings-nav-item active"
+data-section="general">
+
+<i data-lucide="settings"></i>
+
+<span>
+Général
+</span>
+
+</button>
+
+
+<button
+type="button"
+class="settings-nav-item"
+data-section="appearance">
+
+<i data-lucide="palette"></i>
+
+<span>
+Apparence
+</span>
+
+</button>
+
+
+<button
+type="button"
+class="settings-nav-item"
+data-section="notifications">
+
+<i data-lucide="bell"></i>
+
+<span>
+Notifications
+</span>
+
+</button>
+
+
+<button
+type="button"
+class="settings-nav-item"
+data-section="security">
+
+<i data-lucide="shield-check"></i>
+
+<span>
+Sécurité
+</span>
+
+</button>
+
+
+<button
+type="button"
+class="settings-nav-item"
+data-section="maintenance">
+
+<i data-lucide="wrench"></i>
+
+<span>
+Maintenance
+</span>
+
+</button>
+
+</nav>
+
+
+<div class="settings-content">
+
+
+<!--==================================
+GENERAL
+===================================-->
+
+<section
+class="settings-section active"
+data-section-content="general">
+
+<div class="settings-section-header">
+
+<div>
+
+<h2>
+Paramètres généraux
+</h2>
+
+<p>
+Informations principales de Nexa Manga.
+</p>
+
+</div>
+
+<i data-lucide="settings"></i>
+
+</div>
+
+
+<div class="settings-card">
+
+<div class="form-grid">
+
+
+<div class="form-group">
+
+<label for="site-name">
+Nom de la plateforme
+</label>
+
+<input
+type="text"
+id="site-name"
+name="site_name"
+placeholder="Nom de la plateforme"
+autocomplete="off">
+
+</div>
+
+
+<div class="form-group">
+
+<label for="site-language">
+Langue
+</label>
+
+<select
+id="site-language"
+name="language">
+
+<option value="fr">
+Français
+</option>
+
+<option value="en">
+English
+</option>
+
+</select>
+
+</div>
+
+
+<div class="form-group">
+
+<label for="site-description">
+Description
+</label>
+
+<textarea
+id="site-description"
+name="description"
+rows="4"
+placeholder="Description de la plateforme">
+</textarea>
+
+</div>
+
+
+<div class="form-group">
+
+<label for="site-url">
+URL de la plateforme
+</label>
+
+<input
+type="url"
+id="site-url"
+name="site_url"
+placeholder="https://..."
+autocomplete="url">
+
+</div>
+
+</div>
+
+</div>
+
+
+<div class="settings-card">
+
+<div class="settings-card-header">
+
+<div>
+
+<h3>
+Logo et identité
+</h3>
+
+<p>
+Configurez l'identité visuelle de la plateforme.
+</p>
+
+</div>
+
+<i data-lucide="image"></i>
+
+</div>
+
+
+<div class="branding-preview">
+
+<div
+class="branding-logo"
+id="logo-preview">
+
+<img
+id="site-logo-preview"
+src="assets/logo.png"
+alt="Logo Nexa Manga">
+
+</div>
+
+<div class="branding-info">
+
+<strong>
+Logo de Nexa Manga
+</strong>
+
+<span>
+PNG, JPG ou WEBP
+</span>
+
+<label
+for="site-logo"
+class="secondary-button">
+
+<i data-lucide="upload"></i>
+
+<span>
+Choisir une image
+</span>
+
+</label>
+
+<input
+type="file"
+id="site-logo"
+accept="image/png,image/jpeg,image/webp"
+hidden>
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+
+<!--==================================
+APPEARANCE
+===================================-->
+
+<section
+class="settings-section"
+data-section-content="appearance">
+
+<div class="settings-section-header">
+
+<div>
+
+<h2>
+Apparence
+</h2>
+
+<p>
+Personnalisez l'apparence de l'administration.
+</p>
+
+</div>
+
+<i data-lucide="palette"></i>
+
+</div>
+
+
+<div class="settings-card">
+
+<div class="form-group">
+
+<label>
+Thème
+</label>
+
+<div class="theme-options">
+
+<label class="theme-option">
+
+<input
+type="radio"
+name="theme"
+value="dark"
+checked>
+
+<span class="theme-preview dark">
+
+<strong>
+Sombre
+</strong>
+
+</span>
+
+</label>
+
+
+<label class="theme-option">
+
+<input
+type="radio"
+name="theme"
+value="light">
+
+<span class="theme-preview light">
+
+<strong>
+Clair
+</strong>
+
+</span>
+
+</label>
+
+
+<label class="theme-option">
+
+<input
+type="radio"
+name="theme"
+value="system">
+
+<span class="theme-preview system">
+
+<strong>
+Système
+</strong>
+
+</span>
+
+</label>
+
+</div>
+
+</div>
+
+
+<div class="form-grid">
+
+
+<div class="form-group">
+
+<label for="accent-color">
+Couleur principale
+</label>
+
+<select
+id="accent-color"
+name="accent_color">
+
+<option value="red">
+Rouge
+</option>
+
+<option value="purple">
+Violet
+</option>
+
+<option value="blue">
+Bleu
+</option>
+
+<option value="green">
+Vert
+</option>
+
+</select>
+
+</div>
+
+
+<div class="form-group">
+
+<label for="sidebar-mode">
+Barre latérale
+</label>
+
+<select
+id="sidebar-mode"
+name="sidebar_mode">
+
+<option value="expanded">
+Étendue
+</option>
+
+<option value="compact">
+Compacte
+</option>
+
+</select>
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+<!--==================================
+NOTIFICATIONS
+===================================-->
+
+<section
+class="settings-section"
+data-section-content="notifications">
+
+<div class="settings-section-header">
+
+<div>
+
+<h2>
+Notifications
+</h2>
+
+<p>
+Gérez les notifications envoyées par Nexa Manga.
+</p>
+
+</div>
+
+<i data-lucide="bell"></i>
+
+</div>
+
+
+<div class="settings-card">
+
+<div class="setting-row">
+
+<div class="setting-info">
+
+<strong>
+Notifications système
+</strong>
+
+<span>
+Autoriser les notifications importantes de la plateforme.
+</span>
+
+</div>
+
+<label class="switch">
+
+<input
+type="checkbox"
+id="system-notifications"
+name="system_notifications"
+checked>
+
+<span class="slider"></span>
+
+</label>
+
+</div>
+
+
+<div class="setting-row">
+
+<div class="setting-info">
+
+<strong>
+Nouveaux mangas
+</strong>
+
+<span>
+Notifier les utilisateurs lorsqu'un nouveau manga est disponible.
+</span>
+
+</div>
+
+<label class="switch">
+
+<input
+type="checkbox"
+id="new-manga-notifications"
+name="new_manga_notifications"
+checked>
+
+<span class="slider"></span>
+
+</label>
+
+</div>
+
+
+<div class="setting-row">
+
+<div class="setting-info">
+
+<strong>
+Nouveaux chapitres
+</strong>
+
+<span>
+Notifier les utilisateurs lors de la publication d'un nouveau chapitre.
+</span>
+
+</div>
+
+<label class="switch">
+
+<input
+type="checkbox"
+id="new-chapter-notifications"
+name="new_chapter_notifications"
+checked>
+
+<span class="slider"></span>
+
+</label>
+
+</div>
+
+
+<div class="setting-row">
+
+<div class="setting-info">
+
+<strong>
+Commentaires
+</strong>
+
+<span>
+Recevoir les notifications liées aux commentaires.
+</span>
+
+</div>
+
+<label class="switch">
+
+<input
+type="checkbox"
+id="comment-notifications"
+name="comment_notifications"
+checked>
+
+<span class="slider"></span>
+
+</label>
+
+</div>
+
+</div>
+
+</section>
+
+
+<!--==================================
+SECURITY
+===================================-->
+
+<section
+class="settings-section"
+data-section-content="security">
+
+<div class="settings-section-header">
+
+<div>
+
+<h2>
+Sécurité
+</h2>
+
+<p>
+Configurez les paramètres de sécurité de l'administration.
+</p>
+
+</div>
+
+<i data-lucide="shield-check"></i>
+
+</div>
+
+
+<div class="settings-card">
+
+<div class="setting-row">
+
+<div class="setting-info">
+
+<strong>
+Authentification à deux facteurs
+</strong>
+
+<span>
+Renforcez la sécurité des comptes administrateurs.
+</span>
+
+</div>
+
+<label class="switch">
+
+<input
+type="checkbox"
+id="two-factor-auth"
+name="two_factor_auth">
+
+<span class="slider"></span>
+
+</label>
+
+</div>
+
+
+<div class="setting-row">
+
+<div class="setting-info">
+
+<strong>
+Déconnexion automatique
+</strong>
+
+<span>
+Déconnecter automatiquement les sessions inactives.
+</span>
+
+</div>
+
+<label class="switch">
+
+<input
+type="checkbox"
+id="auto-logout"
+name="auto_logout"
+checked>
+
+<span class="slider"></span>
+
+</label>
+
+</div>
+
+
+<div class="form-grid">
+
+<div class="form-group">
+
+<label for="session-timeout">
+Durée de session
+</label>
+
+<select
+id="session-timeout"
+name="session_timeout">
+
+<option value="30">
+30 minutes
+</option>
+
+<option value="60">
+1 heure
+</option>
+
+<option value="120">
+2 heures
+</option>
+
+<option value="240">
+4 heures
+</option>
+
+<option value="480">
+8 heures
+</option>
+
+</select>
+
+</div>
+
+
+<div class="form-group">
+
+<label for="max-login-attempts">
+Tentatives de connexion
+</label>
+
+<select
+id="max-login-attempts"
+name="max_login_attempts">
+
+<option value="3">
+3 tentatives
+</option>
+
+<option value="5">
+5 tentatives
+</option>
+
+<option value="10">
+10 tentatives
+</option>
+
+</select>
+
+</div>
+
+</div>
+
+</div>
+
+
+<div class="settings-card danger-card">
+
+<div class="settings-card-header">
+
+<div>
+
+<h3>
+Zone sensible
+</h3>
+
+<p>
+Actions nécessitant une attention particulière.
+</p>
+
+</div>
+
+<i data-lucide="triangle-alert"></i>
+
+</div>
+
+
+<div class="danger-actions">
+
+<button
+type="button"
+id="logout-all-sessions"
+class="secondary-button">
+
+<i data-lucide="log-out"></i>
+
+<span>
+Déconnecter toutes les sessions
+</span>
+
+</button>
+
+
+<button
+type="button"
+id="reset-security"
+class="secondary-button">
+
+<i data-lucide="shield-off"></i>
+
+<span>
+Réinitialiser la sécurité
+</span>
+
+</button>
+
+</div>
+
+</div>
+
+</section>
+
+
+<!--==================================
+MAINTENANCE
+===================================-->
+
+<section
+class="settings-section"
+data-section-content="maintenance">
+
+<div class="settings-section-header">
+
+<div>
+
+<h2>
+Maintenance
+</h2>
+
+<p>
+Gérez l'état et les opérations techniques de la plateforme.
+</p>
+
+</div>
+
+<i data-lucide="wrench"></i>
+
+</div>
+
+
+<div class="settings-card">
+
+<div class="setting-row">
+
+<div class="setting-info">
+
+<strong>
+Mode maintenance
+</strong>
+
+<span>
+Empêcher temporairement l'accès public à Nexa Manga.
+</span>
+
+</div>
+
+<label class="switch">
+
+<input
+type="checkbox"
+id="maintenance-mode"
+name="maintenance_mode">
+
+<span class="slider"></span>
+
+</label>
+
+</div>
+
+
+<div class="form-group">
+
+<label for="maintenance-message">
+Message de maintenance
+</label>
+
+<textarea
+id="maintenance-message"
+name="maintenance_message"
+rows="4"
+placeholder="Message affiché pendant la maintenance..."></textarea>
+
+</div>
+
+</div>
+
+
+<div class="settings-card">
+
+<div class="settings-card-header">
+
+<div>
+
+<h3>
+Outils système
+</h3>
+
+<p>
+Opérations de maintenance disponibles.
+</p>
+
+</div>
+
+<i data-lucide="database"></i>
+
+</div>
+
+
+<div class="maintenance-actions">
+
+<button
+type="button"
+id="clear-cache"
+class="secondary-button">
+
+<i data-lucide="trash-2"></i>
+
+<span>
+Vider le cache
+</span>
+
+</button>
+
+
+<button
+type="button"
+id="refresh-data"
+class="secondary-button">
+
+<i data-lucide="database-backup"></i>
+
+<span>
+Actualiser les données
+</span>
+
+</button>
+
+</div>
+
+</div>
+
+</section>
+
+
+</div>
+
+</section>
+
+<!--==================================
+FOOTER ACTIONS
+===================================-->
+
+<div class="settings-footer">
+
+<div class="settings-save-info">
+
+<i data-lucide="info"></i>
+
+<span>
+Les modifications sont appliquées après enregistrement.
+</span>
+
+</div>
+
+<button
+type="button"
+id="reset-settings"
+class="secondary-button">
+
+<i data-lucide="rotate-ccw"></i>
+
+<span>
+Réinitialiser
+</span>
+
+</button>
+
+<button
+type="button"
+id="save-settings-bottom"
+class="primary-button">
+
+<i data-lucide="save"></i>
+
+<span>
+Enregistrer les paramètres
+</span>
+
+</button>
+
+</div>
+
+
+</main>
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script src="js/helpers.js"></script>
+<script src="js/toast.js"></script>
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/sidebar.js"></script>
+<script src="js/settings.js"></script>
+<script src="js/page-boot.js"></script>
+</body>
+
+</html>

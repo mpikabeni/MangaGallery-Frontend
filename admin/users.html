@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+name="viewport"
+content="width=device-width,initial-scale=1.0">
+
+<meta
+http-equiv="X-UA-Compatible"
+content="IE=edge">
+
+<meta
+name="description"
+content="Gestion des utilisateurs - Nexa Admin">
+
+<meta
+name="theme-color"
+content="#7C5CFF">
+
+<title>
+
+Gestion des Utilisateurs • Nexa Manga
+
+</title>
+
+<link
+rel="icon"
+type="image/png"
+href="assets/logo.png">
+
+<link
+rel="preconnect"
+href="https://fonts.googleapis.com">
+
+<link
+rel="preconnect"
+href="https://fonts.gstatic.com"
+crossorigin>
+
+<link
+href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"
+rel="stylesheet">
+
+<link
+rel="stylesheet"
+href="css/dashboard.css">
+
+<link
+rel="stylesheet"
+href="css/users.css">
+
+
+
+
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://telegram.org; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com data:; img-src 'self' data: https: http:; connect-src 'self' https:; object-src 'none'; base-uri 'self'; form-action 'self'">
+<script src="../js/config.js"></script>
+<script src="js/safe-html.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js" defer></script>
+</head>
+
+<body>
+
+<div class="dashboard">
+
+<aside class="sidebar"></aside>
+
+<main class="main-content">
+
+<header class="topbar">
+
+<div class="page-title">
+
+<h1>
+
+Gestion des Utilisateurs
+
+</h1>
+
+<p>
+
+Consulter, modifier et administrer les comptes utilisateurs
+
+</p>
+
+</div>
+
+<button
+type="button"
+id="refresh-users"
+class="secondary-button">
+
+<i data-lucide="refresh-cw"></i>
+
+<span>
+
+Actualiser
+
+</span>
+
+</button>
+
+</header>
+
+<section class="toolbar">
+
+<div class="toolbar-left">
+
+<div class="search-box">
+
+<i data-lucide="search"></i>
+
+<input
+type="search"
+id="search-user"
+placeholder="Rechercher un utilisateur..."
+autocomplete="off">
+
+</div>
+
+<select
+id="role-filter"
+class="filter-select">
+
+<option value="">
+
+Tous les rôles
+
+</option>
+
+<option value="user">
+
+Utilisateur
+
+</option>
+
+<option value="moderator">
+
+Modérateur
+
+</option>
+
+<option value="admin">
+
+Administrateur
+
+</option>
+
+<option value="super_admin">
+
+Super Administrateur
+
+</option>
+
+</select>
+
+<select
+id="status-filter"
+class="filter-select">
+
+<option value="">
+
+Tous les statuts
+
+</option>
+
+<option value="active">
+
+Actif
+
+</option>
+
+<option value="suspended">
+
+Suspendu
+
+</option>
+
+<option value="banned">
+
+Banni
+
+</option>
+
+</select>
+
+</div>
+
+</section>
+
+<section class="table-section">
+
+<div class="table-header">
+
+<h2>
+
+Liste des utilisateurs
+
+</h2>
+
+<div class="table-actions">
+
+<span id="user-count">
+
+0 utilisateurs
+
+</span>
+
+</div>
+
+</div>
+
+<div class="table-container">
+
+<table class="admin-table">
+
+<thead>
+
+<tr>
+
+<th>Photo</th>
+
+<th>Nom</th>
+
+<th>Email</th>
+
+<th>Rôle</th>
+
+<th>Statut</th>
+
+<th>Solde</th>
+
+<th>Inscription</th>
+
+<th>Dernière connexion</th>
+
+<th>Actions</th>
+
+</tr>
+
+</thead>
+
+<tbody id="users-table-body">
+
+<tr>
+
+<td
+colspan="9"
+class="loading-row">
+
+Chargement des utilisateurs...
+
+</td>
+
+</tr>
+
+</tbody>
+
+</table>
+
+</div>
+
+<div class="pagination">
+
+<button
+type="button"
+id="previous-page"
+class="secondary-button">
+
+<i data-lucide="chevron-left"></i>
+
+<span>
+
+Précédent
+
+</span>
+
+</button>
+
+<div class="pagination-info">
+
+<span id="pagination-info">
+
+Page 1 sur 1
+
+</span>
+
+</div>
+
+<button
+type="button"
+id="next-page"
+class="secondary-button">
+
+<span>
+
+Suivant
+
+</span>
+
+<i data-lucide="chevron-right"></i>
+
+</button>
+
+</div>
+
+</section>
+
+<!--==================================
+USER DETAILS MODAL
+===================================-->
+
+<div
+id="user-modal"
+class="modal hidden">
+
+<div class="modal-content">
+
+<div class="modal-header">
+
+<h2 id="user-modal-title">
+
+Profil utilisateur
+
+</h2>
+
+<button
+type="button"
+id="close-user-modal"
+class="icon-button">
+
+<i data-lucide="x"></i>
+
+</button>
+
+</div>
+
+<form id="user-form">
+
+<input
+type="hidden"
+id="user-id">
+
+<div class="profile-preview">
+
+<img
+id="user-avatar"
+src="assets/logo.png"
+alt="Avatar">
+
+</div>
+
+<div class="form-grid">
+
+<div class="form-group">
+
+<label for="user-name">
+
+Nom
+
+</label>
+
+<input
+type="text"
+id="user-name"
+readonly>
+
+</div>
+
+<div class="form-group">
+
+<label for="user-email">
+
+Email
+
+</label>
+
+<input
+type="email"
+id="user-email"
+readonly>
+
+</div>
+
+</div>
+
+<div class="form-grid">
+
+<div class="form-group">
+
+<label for="user-role">
+
+Rôle
+
+</label>
+
+<select id="user-role">
+
+<option value="user">Utilisateur</option>
+
+<option value="moderator">Modérateur</option>
+
+<option value="admin">Administrateur</option>
+
+<option value="super_admin">Super Administrateur</option>
+
+</select>
+
+</div>
+
+<div class="form-group">
+
+<label for="user-status">
+
+Statut
+
+</label>
+
+<select id="user-status">
+
+<option value="active">Actif</option>
+
+<option value="suspended">Suspendu</option>
+
+<option value="banned">Banni</option>
+
+</select>
+
+</div>
+
+</div>
+
+<div class="form-grid">
+
+<div class="form-group">
+
+<label for="user-wallet">
+
+Solde
+
+</label>
+
+<input
+type="text"
+id="user-wallet"
+readonly>
+
+</div>
+
+<div class="form-group">
+
+<label for="user-created">
+
+Date d'inscription
+
+</label>
+
+<input
+type="text"
+id="user-created"
+readonly>
+
+</div>
+
+</div>
+
+<div class="form-group">
+
+<label for="user-statistics">
+
+Statistiques de lecture
+
+</label>
+
+<textarea
+id="user-statistics"
+rows="4"
+readonly>
+
+</textarea>
+
+</div>
+
+<div class="form-grid">
+
+<div class="form-group">
+
+<label for="user-favorites">
+
+Mangas favoris
+
+</label>
+
+<input
+type="number"
+id="user-favorites"
+readonly>
+
+</div>
+
+<div class="form-group">
+
+<label for="user-history">
+
+Chapitres lus
+
+</label>
+
+<input
+type="number"
+id="user-history"
+readonly>
+
+</div>
+
+</div>
+
+<div class="form-group">
+
+<label for="user-notes">
+
+Notes administrateur
+
+</label>
+
+<textarea
+id="user-notes"
+rows="5">
+
+</textarea>
+
+</div>
+
+<div class="modal-actions">
+
+<button
+type="button"
+id="close-user-button"
+class="secondary-button">
+
+Fermer
+
+</button>
+
+<button
+type="submit"
+id="save-user-button"
+class="primary-button">
+
+<i data-lucide="save"></i>
+
+<span>
+
+Enregistrer
+
+</span>
+
+</button>
+
+</div>
+
+</form>
+
+</div>
+
+</div>
+
+</main>
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script src="js/helpers.js"></script>
+<script src="js/toast.js"></script>
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/sidebar.js"></script>
+<script src="js/users.js"></script>
+<script src="js/page-boot.js"></script>
+</body>
+
+</html>

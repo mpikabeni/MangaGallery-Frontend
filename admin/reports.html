@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0">
+
+<meta
+    http-equiv="X-UA-Compatible"
+    content="IE=edge">
+
+<meta
+    name="description"
+    content="Gestion des signalements - Nexa Admin">
+
+<meta
+    name="theme-color"
+    content="#7C5CFF">
+
+<title>Gestion des Signalements • Nexa Manga</title>
+
+<link
+    rel="icon"
+    type="image/png"
+    href="assets/logo.png">
+
+<link
+    rel="preconnect"
+    href="https://fonts.googleapis.com">
+
+<link
+    rel="preconnect"
+    href="https://fonts.gstatic.com"
+    crossorigin>
+
+<link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet">
+
+<link
+    rel="stylesheet"
+    href="css/dashboard.css">
+
+<link
+    rel="stylesheet"
+    href="css/reports.css">
+
+
+
+
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://telegram.org; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com data:; img-src 'self' data: https: http:; connect-src 'self' https:; object-src 'none'; base-uri 'self'; form-action 'self'">
+<script src="../js/config.js"></script>
+<script src="js/safe-html.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js" defer></script>
+</head>
+
+<body>
+
+<div class="dashboard">
+
+<aside
+    class="sidebar"
+    aria-label="Navigation principale">
+
+    <!-- Sidebar du Dashboard -->
+
+</aside>
+
+<main class="main-content">
+
+<header class="topbar">
+
+<div class="page-title">
+
+<h1>
+Gestion des Signalements
+</h1>
+
+<p>
+Consultez, analysez et gérez les signalements de Nexa Manga.
+</p>
+
+</div>
+
+<div class="topbar-actions">
+
+<button
+    type="button"
+    id="refresh-reports"
+    class="secondary-button"
+    aria-label="Actualiser les signalements">
+
+    <i data-lucide="refresh-cw"></i>
+
+    <span>
+    Actualiser
+    </span>
+
+</button>
+
+<button
+    type="button"
+    id="export-reports"
+    class="primary-button"
+    aria-label="Exporter les signalements">
+
+    <i data-lucide="download"></i>
+
+    <span>
+    Exporter
+    </span>
+
+</button>
+
+</div>
+
+</header>
+
+
+<section
+    class="reports-stats"
+    aria-label="Statistiques des signalements">
+
+<div class="report-stat-card">
+
+<div class="report-stat-icon total">
+
+<i data-lucide="flag"></i>
+
+</div>
+
+<div class="report-stat-content">
+
+<span>
+Total
+</span>
+
+<strong id="total-reports">
+0
+</strong>
+
+</div>
+
+</div>
+
+
+<div class="report-stat-card">
+
+<div class="report-stat-icon pending">
+
+<i data-lucide="clock-3"></i>
+
+</div>
+
+<div class="report-stat-content">
+
+<span>
+En attente
+</span>
+
+<strong id="pending-reports">
+0
+</strong>
+
+</div>
+
+</div>
+
+
+<div class="report-stat-card">
+
+<div class="report-stat-icon reviewing">
+
+<i data-lucide="search-check"></i>
+
+</div>
+
+<div class="report-stat-content">
+
+<span>
+En examen
+</span>
+
+<strong id="reviewing-reports">
+0
+</strong>
+
+</div>
+
+</div>
+
+
+<div class="report-stat-card">
+
+<div class="report-stat-icon resolved">
+
+<i data-lucide="circle-check"></i>
+
+</div>
+
+<div class="report-stat-content">
+
+<span>
+Résolus
+</span>
+
+<strong id="resolved-reports">
+0
+</strong>
+
+</div>
+
+</div>
+
+</section>
+
+
+<section
+    class="toolbar"
+    aria-label="Filtres des signalements">
+
+<div class="toolbar-left">
+
+<div class="search-box">
+
+<i data-lucide="search"></i>
+
+<input
+    type="search"
+    id="search-report"
+    placeholder="Rechercher un signalement..."
+    autocomplete="off"
+    spellcheck="false"
+    aria-label="Rechercher un signalement">
+
+</div>
+
+
+<select
+    id="report-type-filter"
+    class="filter-select"
+    aria-label="Filtrer par type">
+
+<option value="">
+Tous les types
+</option>
+
+<option value="comment">
+Commentaire
+</option>
+
+<option value="manga">
+Manga
+</option>
+
+<option value="user">
+Utilisateur
+</option>
+
+<option value="content">
+Contenu
+</option>
+
+<option value="other">
+Autre
+</option>
+
+</select>
+
+
+<select
+    id="report-status-filter"
+    class="filter-select"
+    aria-label="Filtrer par statut">
+
+<option value="">
+Tous les statuts
+</option>
+
+<option value="pending">
+En attente
+</option>
+
+<option value="reviewing">
+En examen
+</option>
+
+<option value="resolved">
+Résolu
+</option>
+
+<option value="rejected">
+Rejeté
+</option>
+
+</select>
+
+
+<select
+    id="report-severity-filter"
+    class="filter-select"
+    aria-label="Filtrer par gravité">
+
+<option value="">
+Toutes les gravités
+</option>
+
+<option value="low">
+Faible
+</option>
+
+<option value="medium">
+Moyenne
+</option>
+
+<option value="high">
+Élevée
+</option>
+
+<option value="critical">
+Critique
+</option>
+
+</select>
+
+</div>
+
+</section>
+
+
+<section
+    class="table-section"
+    id="reports-section"
+    aria-labelledby="reports-heading">
+
+<div class="table-header">
+
+<div>
+
+<h2 id="reports-heading">
+Liste des signalements
+</h2>
+
+<p class="table-subtitle">
+Examinez les signalements reçus et prenez les mesures nécessaires.
+</p>
+
+</div>
+
+<div class="table-actions">
+
+<span
+    id="report-count"
+    aria-live="polite">
+0 signalement
+</span>
+
+</div>
+
+</div>
+
+
+<div class="table-container">
+
+<table class="admin-table">
+
+<thead>
+
+<tr>
+
+<th scope="col">
+Signalement
+</th>
+
+<th scope="col">
+Utilisateur
+</th>
+
+<th scope="col">
+Type
+</th>
+
+<th scope="col">
+Gravité
+</th>
+
+<th scope="col">
+Statut
+</th>
+
+<th scope="col">
+Date
+</th>
+
+<th scope="col">
+Actions
+</th>
+
+</tr>
+
+</thead>
+
+<tbody id="reports-table-body">
+
+<tr>
+
+<td
+    colspan="7"
+    class="loading-row"
+    aria-live="polite">
+
+    Chargement des signalements...
+
+</td>
+
+</tr>
+
+</tbody>
+
+</table>
+
+</div>
+
+<!--==================================
+PAGINATION
+===================================-->
+
+<div
+    class="pagination"
+    aria-label="Pagination des signalements">
+
+<button
+    type="button"
+    id="previous-report-page"
+    class="secondary-button"
+    aria-label="Page précédente">
+
+    <i data-lucide="chevron-left"></i>
+
+    <span>
+    Précédent
+    </span>
+
+</button>
+
+<div class="pagination-info">
+
+<span
+    id="report-pagination-info"
+    aria-live="polite">
+Page 1 sur 1
+</span>
+
+</div>
+
+<button
+    type="button"
+    id="next-report-page"
+    class="secondary-button"
+    aria-label="Page suivante">
+
+    <span>
+    Suivant
+    </span>
+
+    <i data-lucide="chevron-right"></i>
+
+</button>
+
+</div>
+
+</section>
+
+
+<!--==================================
+REPORT DETAILS MODAL
+===================================-->
+
+<div
+    id="report-modal"
+    class="modal hidden"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="report-modal-title"
+    aria-hidden="true">
+
+<div class="modal-content">
+
+<div class="modal-header">
+
+<div>
+
+<h2 id="report-modal-title">
+Détails du signalement
+</h2>
+
+<p id="report-modal-subtitle">
+Informations du signalement
+</p>
+
+</div>
+
+<button
+    type="button"
+    id="close-report-modal"
+    class="icon-button"
+    aria-label="Fermer">
+
+    <i data-lucide="x"></i>
+
+</button>
+
+</div>
+
+
+<div
+    class="report-details"
+    id="report-details">
+
+<div class="detail-row">
+
+<span>
+Signalement
+</span>
+
+<strong id="detail-report-title">
+-
+</strong>
+
+</div>
+
+
+<div class="detail-row">
+
+<span>
+Type
+</span>
+
+<strong id="detail-report-type">
+-
+</strong>
+
+</div>
+
+
+<div class="detail-row">
+
+<span>
+Gravité
+</span>
+
+<strong id="detail-report-severity">
+-
+</strong>
+
+</div>
+
+
+<div class="detail-row">
+
+<span>
+Statut
+</span>
+
+<strong id="detail-report-status">
+-
+</strong>
+
+</div>
+
+
+<div class="detail-row">
+
+<span>
+Utilisateur
+</span>
+
+<strong id="detail-report-user">
+-
+</strong>
+
+</div>
+
+
+<div class="detail-row">
+
+<span>
+Date
+</span>
+
+<strong id="detail-report-date">
+-
+</strong>
+
+</div>
+
+
+<div class="detail-block">
+
+<span>
+Motif
+</span>
+
+<p id="detail-report-reason">
+-
+</p>
+
+</div>
+
+
+<div class="detail-block">
+
+<span>
+Description
+</span>
+
+<p id="detail-report-description">
+-
+</p>
+
+</div>
+
+
+<div
+    class="detail-block hidden"
+    id="detail-report-content-container">
+
+<span>
+Contenu signalé
+</span>
+
+<div id="detail-report-content">
+-
+</div>
+
+</div>
+
+</div>
+
+
+<div class="modal-actions">
+
+<button
+    type="button"
+    id="reject-report"
+    class="secondary-button">
+
+    <i data-lucide="x-circle"></i>
+
+    <span>
+    Rejeter
+    </span>
+
+</button>
+
+
+<button
+    type="button"
+    id="review-report"
+    class="secondary-button">
+
+    <i data-lucide="search-check"></i>
+
+    <span>
+    Mettre en examen
+    </span>
+
+</button>
+
+
+<button
+    type="button"
+    id="resolve-report"
+    class="primary-button">
+
+    <i data-lucide="check-circle"></i>
+
+    <span>
+    Résoudre
+    </span>
+
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+
+<!--==================================
+CONFIRMATION MODAL
+===================================-->
+
+<div
+    id="report-confirm-modal"
+    class="modal hidden"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="report-confirm-title"
+    aria-hidden="true">
+
+<div class="confirm-modal-content">
+
+<div class="confirm-icon">
+
+<i data-lucide="triangle-alert"></i>
+
+</div>
+
+<h2 id="report-confirm-title">
+Confirmer l'action
+</h2>
+
+<p id="report-confirm-message">
+Voulez-vous confirmer cette action ?
+</p>
+
+<div class="modal-actions">
+
+<button
+    type="button"
+    id="cancel-report-action"
+    class="secondary-button">
+
+    Annuler
+
+</button>
+
+<button
+    type="button"
+    id="confirm-report-action"
+    class="primary-button">
+
+    Confirmer
+
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+
+</main>
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script src="js/helpers.js"></script>
+<script src="js/toast.js"></script>
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/sidebar.js"></script>
+<script src="js/reports.js"></script>
+<script src="js/page-boot.js"></script>
+</body>
+
+</html>

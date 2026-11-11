@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+name="viewport"
+content="width=device-width,initial-scale=1.0">
+
+<title>Rôles et Permissions</title>
+
+<link
+rel="preconnect"
+href="https://fonts.googleapis.com">
+
+<link
+rel="preconnect"
+href="https://fonts.gstatic.com"
+crossorigin>
+
+<link
+href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap"
+rel="stylesheet">
+
+<link
+rel="stylesheet"
+href="css/dashboard.css">
+
+<link
+rel="stylesheet"
+href="css/roles.css">
+
+
+
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://telegram.org; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com data:; img-src 'self' data: https: http:; connect-src 'self' https:; object-src 'none'; base-uri 'self'; form-action 'self'">
+<script src="../js/config.js"></script>
+<script src="js/safe-html.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js" defer></script>
+</head>
+
+<body>
+
+<div class="dashboard">
+
+<aside class="sidebar"></aside>
+
+<main class="main-content">
+
+<header class="topbar">
+
+<div>
+
+<h1>Rôles et Permissions</h1>
+
+<p>Gérer les accès des administrateurs</p>
+
+</div>
+
+<button
+id="add-role"
+class="primary-button">
+
+<i data-lucide="shield-plus"></i>
+
+<span>Nouveau rôle</span>
+
+</button>
+
+</header>
+
+<section class="toolbar">
+
+<div class="search-box">
+
+<i data-lucide="search"></i>
+
+<input
+type="search"
+id="search-role"
+placeholder="Rechercher un rôle">
+
+</div>
+
+</section>
+
+<!--==========================
+ROLES TABLE
+===========================-->
+
+<section class="table-section">
+
+<div class="table-container">
+
+<table class="admin-table">
+
+<thead>
+
+<tr>
+
+<th>Rôle</th>
+
+<th>Description</th>
+
+<th>Utilisateurs</th>
+
+<th>Permissions</th>
+
+<th>Actions</th>
+
+</tr>
+
+</thead>
+
+<tbody id="roles-table-body">
+
+</tbody>
+
+</table>
+
+</div>
+
+</section>
+
+<!--==========================
+ROLE MODAL
+===========================-->
+
+<div
+id="role-modal"
+class="modal hidden">
+
+<div class="modal-content">
+
+<div class="modal-header">
+
+<h2 id="role-modal-title">
+
+Rôle et Permissions
+
+</h2>
+
+<button
+id="close-role-modal"
+class="icon-button">
+
+<i data-lucide="x"></i>
+
+</button>
+
+</div>
+
+<form id="role-form">
+
+<div class="form-group">
+
+<label for="role-name">
+
+Nom du rôle
+
+</label>
+
+<input
+type="text"
+id="role-name"
+required>
+
+</div>
+
+<div class="form-group">
+
+<label for="role-description">
+
+Description
+
+</label>
+
+<textarea
+id="role-description"
+rows="4">
+
+</textarea>
+
+</div>
+
+<div class="permissions-grid">
+
+<label class="permission-item">
+
+<input
+type="checkbox"
+id="permission-dashboard">
+
+<span>Accès au Dashboard</span>
+
+</label>
+
+<label class="permission-item">
+
+<input
+type="checkbox"
+id="permission-mangas">
+
+<span>Gestion des Mangas</span>
+
+</label>
+
+<label class="permission-item">
+
+<input
+type="checkbox"
+id="permission-chapters">
+
+<span>Gestion des Chapitres</span>
+
+</label>
+
+<label class="permission-item">
+
+<input
+type="checkbox"
+id="permission-users">
+
+<span>Gestion des Utilisateurs</span>
+
+</label>
+
+<label class="permission-item">
+
+<input
+type="checkbox"
+id="permission-comments">
+
+<span>Gestion des Commentaires</span>
+
+</label>
+
+<label class="permission-item">
+
+<input
+type="checkbox"
+id="permission-settings">
+
+<span>Gestion des Paramètres</span>
+
+</label>
+
+<div class="permissions-grid">
+
+<label class="permission-item">
+
+<input
+type="checkbox"
+id="permission-notifications">
+
+<span>Gestion des Notifications</span>
+
+</label>
+
+<label class="permission-item">
+
+<input
+type="checkbox"
+id="permission-statistics">
+
+<span>Voir les Statistiques</span>
+
+</label>
+
+<label class="permission-item">
+
+<input
+type="checkbox"
+id="permission-media">
+
+<span>Gestion des Médias</span>
+
+</label>
+
+<label class="permission-item">
+
+<input
+type="checkbox"
+id="permission-reports">
+
+<span>Gestion des Signalements</span>
+
+</label>
+
+<label class="permission-item">
+
+<input
+type="checkbox"
+id="permission-roles">
+
+<span>Gestion des Rôles</span>
+
+</label>
+
+<label class="permission-item">
+
+<input
+type="checkbox"
+id="permission-system">
+
+<span>Maintenance Système</span>
+
+</label>
+
+</div>
+
+<div class="form-group">
+
+<label for="assigned-admin">
+
+Administrateur assigné
+
+</label>
+
+<select id="assigned-admin">
+
+</select>
+
+</div>
+
+<div class="modal-actions">
+
+<button
+type="button"
+id="delete-role-button"
+class="secondary-button">
+
+Supprimer
+
+</button>
+
+<button
+type="button"
+id="close-role-button"
+class="secondary-button">
+
+Fermer
+
+</button>
+
+<button
+type="submit"
+id="save-role-button"
+class="primary-button">
+
+Enregistrer
+
+</button>
+
+</div>
+
+</form>
+
+</div>
+
+</div>
+
+</main>
+
+</div>
+
+
+
+
+
+
+
+
+
+
+<script src="js/helpers.js"></script>
+<script src="js/toast.js"></script>
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/sidebar.js"></script>
+<script src="js/roles.js"></script>
+<script src="js/page-boot.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0">
+
+<meta
+    name="description"
+    content="Système Nexa Manga - Administration">
+
+<meta
+    name="theme-color"
+    content="#7C5CFF">
+
+<title>Système • Nexa Manga</title>
+
+<link
+    rel="icon"
+    type="image/png"
+    href="assets/logo.png">
+
+<link
+    rel="stylesheet"
+    href="css/dashboard.css">
+
+<link
+    rel="stylesheet"
+    href="css/system.css">
+
+<link
+    rel="preconnect"
+    href="https://fonts.googleapis.com">
+
+<link
+    rel="preconnect"
+    href="https://fonts.gstatic.com"
+    crossorigin>
+
+<link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet">
+
+
+
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://telegram.org; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com data:; img-src 'self' data: https: http:; connect-src 'self' https:; object-src 'none'; base-uri 'self'; form-action 'self'">
+<script src="../js/config.js"></script>
+<script src="js/safe-html.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js" defer></script>
+</head>
+
+<body>
+
+<div class="dashboard">
+
+<aside
+    class="sidebar"
+    aria-label="Navigation principale">
+</aside>
+
+
+<main class="main-content">
+
+<header class="topbar">
+
+<div class="page-title">
+
+<h1>
+Système
+</h1>
+
+<p>
+Surveillez l'état technique et les services de Nexa Manga.
+</p>
+
+</div>
+
+<div class="topbar-actions">
+
+<button
+    type="button"
+    id="refresh-system"
+    class="secondary-button">
+
+<i data-lucide="refresh-cw"></i>
+
+<span>
+Actualiser
+</span>
+
+</button>
+
+</div>
+
+</header>
+
+
+<section class="system-status-grid">
+
+<article class="system-status-card">
+
+<div class="system-status-icon online">
+
+<i data-lucide="server"></i>
+
+</div>
+
+<div class="system-status-content">
+
+<span>
+Serveur
+</span>
+
+<strong id="server-status">
+Opérationnel
+</strong>
+
+<small id="server-uptime">
+-
+</small>
+
+</div>
+
+</article>
+
+
+<article class="system-status-card">
+
+<div class="system-status-icon online">
+
+<i data-lucide="database"></i>
+
+</div>
+
+<div class="system-status-content">
+
+<span>
+Base de données
+</span>
+
+<strong id="database-status">
+Opérationnelle
+</strong>
+
+<small id="database-status-detail">
+-
+</small>
+
+</div>
+
+</article>
+
+
+<article class="system-status-card">
+
+<div class="system-status-icon online">
+
+<i data-lucide="globe"></i>
+
+</div>
+
+<div class="system-status-content">
+
+<span>
+API
+</span>
+
+<strong id="api-status">
+Opérationnelle
+</strong>
+
+<small id="api-response-time">
+-
+</small>
+
+</div>
+
+</article>
+
+
+<article class="system-status-card">
+
+<div class="system-status-icon online">
+
+<i data-lucide="hard-drive"></i>
+
+</div>
+
+<div class="system-status-content">
+
+<span>
+Stockage
+</span>
+
+<strong id="storage-status">
+Disponible
+</strong>
+
+<small id="storage-usage">
+-
+</small>
+
+</div>
+
+</article>
+
+</section>
+
+
+<section class="system-grid">
+
+<article class="system-card">
+
+<div class="system-card-header">
+
+<div>
+
+<h2>
+Informations système
+</h2>
+
+<p>
+Informations sur l'environnement d'exécution.
+</p>
+
+</div>
+
+<i data-lucide="info"></i>
+
+</div>
+
+<div class="system-info-list">
+
+<div class="system-info-row">
+
+<span>
+Version de l'application
+</span>
+
+<strong id="app-version">
+-
+</strong>
+
+</div>
+
+<div class="system-info-row">
+
+<span>
+Version API
+</span>
+
+<strong id="api-version">
+-
+</strong>
+
+</div>
+
+<div class="system-info-row">
+
+<span>
+Environnement
+</span>
+
+<strong id="environment">
+-
+</strong>
+
+</div>
+
+<div class="system-info-row">
+
+<span>
+Version serveur
+</span>
+
+<strong id="server-version">
+-
+</strong>
+
+</div>
+
+<div class="system-info-row">
+
+<span>
+Base de données
+</span>
+
+<strong id="database-version">
+-
+</strong>
+
+</div>
+
+<div class="system-info-row">
+
+<span>
+Dernier démarrage
+</span>
+
+<strong id="server-started">
+-
+</strong>
+
+</div>
+
+</div>
+
+</article>
+
+
+<article class="system-card">
+
+<div class="system-card-header">
+
+<div>
+
+<h2>
+Ressources
+</h2>
+
+<p>
+Utilisation actuelle des ressources serveur.
+</p>
+
+</div>
+
+<i data-lucide="cpu"></i>
+
+</div>
+
+<div class="resource-list">
+
+<div class="resource-item">
+
+<div class="resource-header">
+
+<span>
+CPU
+</span>
+
+<strong id="cpu-usage">
+0%
+</strong>
+
+</div>
+
+<div class="resource-progress">
+
+<div
+    id="cpu-progress"
+    class="resource-progress-bar"
+    style="width:0%">
+</div>
+
+</div>
+
+</div>
+
+
+<div class="resource-item">
+
+<div class="resource-header">
+
+<span>
+Mémoire RAM
+</span>
+
+<strong id="memory-usage">
+0%
+</strong>
+
+</div>
+
+<div class="resource-progress">
+
+<div
+    id="memory-progress"
+    class="resource-progress-bar"
+    style="width:0%">
+</div>
+
+</div>
+
+</div>
+
+
+<div class="resource-item">
+
+<div class="resource-header">
+
+<span>
+Stockage
+</span>
+
+<strong id="disk-usage">
+0%
+</strong>
+
+</div>
+
+<div class="resource-progress">
+
+<div
+    id="disk-progress"
+    class="resource-progress-bar"
+    style="width:0%">
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</article>
+
+</section>
+
+<!--==================================
+SERVICES
+===================================-->
+
+<section class="system-card">
+
+<div class="system-card-header">
+
+<div>
+
+<h2>
+Services
+</h2>
+
+<p>
+État des principaux services de Nexa Manga.
+</p>
+
+</div>
+
+<i data-lucide="layers"></i>
+
+</div>
+
+
+<div
+    class="services-list"
+    id="services-list">
+
+<div class="service-row">
+
+<div class="service-info">
+
+<div class="service-icon">
+
+<i data-lucide="server"></i>
+
+</div>
+
+<div>
+
+<strong>
+Serveur principal
+</strong>
+
+<span>
+Application Nexa Manga
+</span>
+
+</div>
+
+</div>
+
+<span
+    class="service-status online"
+    id="main-server-service">
+
+Opérationnel
+
+</span>
+
+</div>
+
+
+<div class="service-row">
+
+<div class="service-info">
+
+<div class="service-icon">
+
+<i data-lucide="database"></i>
+
+</div>
+
+<div>
+
+<strong>
+Base de données
+</strong>
+
+<span>
+Stockage des données
+</span>
+
+</div>
+
+</div>
+
+<span
+    class="service-status online"
+    id="database-service">
+
+Opérationnel
+
+</span>
+
+</div>
+
+
+<div class="service-row">
+
+<div class="service-info">
+
+<div class="service-icon">
+
+<i data-lucide="key-round"></i>
+
+</div>
+
+<div>
+
+<strong>
+Authentification
+</strong>
+
+<span>
+Connexion et sessions utilisateurs
+</span>
+
+</div>
+
+</div>
+
+<span
+    class="service-status online"
+    id="auth-service">
+
+Opérationnel
+
+</span>
+
+</div>
+
+
+<div class="service-row">
+
+<div class="service-info">
+
+<div class="service-icon">
+
+<i data-lucide="bell"></i>
+
+</div>
+
+<div>
+
+<strong>
+Notifications
+</strong>
+
+<span>
+Service de notifications
+</span>
+
+</div>
+
+</div>
+
+<span
+    class="service-status online"
+    id="notification-service">
+
+Opérationnel
+
+</span>
+
+</div>
+
+
+<div class="service-row">
+
+<div class="service-info">
+
+<div class="service-icon">
+
+<i data-lucide="image"></i>
+
+</div>
+
+<div>
+
+<strong>
+Stockage médias
+</strong>
+
+<span>
+Images et fichiers Nexa Manga
+</span>
+
+</div>
+
+</div>
+
+<span
+    class="service-status online"
+    id="media-service">
+
+Opérationnel
+
+</span>
+
+</div>
+
+</div>
+
+</section>
+
+
+<!--==================================
+SYSTEM ACTIONS
+===================================-->
+
+<section class="system-card">
+
+<div class="system-card-header">
+
+<div>
+
+<h2>
+Actions système
+</h2>
+
+<p>
+Effectuez les opérations techniques disponibles.
+</p>
+
+</div>
+
+<i data-lucide="settings-2"></i>
+
+</div>
+
+
+<div class="system-actions">
+
+<button
+    type="button"
+    id="clear-system-cache"
+    class="secondary-button">
+
+<i data-lucide="trash-2"></i>
+
+<span>
+Vider le cache
+</span>
+
+</button>
+
+
+<button
+    type="button"
+    id="restart-services"
+    class="secondary-button">
+
+<i data-lucide="rotate-cw"></i>
+
+<span>
+Redémarrer les services
+</span>
+
+</button>
+
+
+<button
+    type="button"
+    id="run-system-check"
+    class="secondary-button">
+
+<i data-lucide="activity"></i>
+
+<span>
+Vérifier le système
+</span>
+
+</button>
+
+
+<button
+    type="button"
+    id="create-system-backup"
+    class="primary-button">
+
+<i data-lucide="database-backup"></i>
+
+<span>
+Créer une sauvegarde
+</span>
+
+</button>
+
+</div>
+
+</section>
+
+
+<!--==================================
+SYSTEM LOGS
+===================================-->
+
+<section class="system-card">
+
+<div class="system-card-header">
+
+<div>
+
+<h2>
+Journal système
+</h2>
+
+<p>
+Dernières informations techniques enregistrées.
+</p>
+
+</div>
+
+<button
+    type="button"
+    id="clear-system-logs"
+    class="secondary-button">
+
+<i data-lucide="trash-2"></i>
+
+<span>
+Effacer
+</span>
+
+</button>
+
+</div>
+
+
+<div
+    class="system-logs"
+    id="system-logs">
+
+<div class="system-log-row">
+
+<div class="log-icon info">
+
+<i data-lucide="info"></i>
+
+</div>
+
+<div class="log-content">
+
+<strong>
+Système initialisé
+</strong>
+
+<span>
+En attente des informations du serveur...
+</span>
+
+</div>
+
+<time>
+-
+</time>
+
+</div>
+
+</div>
+
+</section>
+
+<!--==================================
+SYSTEM STATE
+===================================-->
+
+<section
+    id="system-state"
+    class="system-state hidden"
+    aria-live="polite">
+
+<div class="system-state-icon">
+
+<i data-lucide="monitor-cog"></i>
+
+</div>
+
+<h2 id="system-state-title">
+Informations indisponibles
+</h2>
+
+<p id="system-state-message">
+Impossible de récupérer les informations système.
+</p>
+
+<button
+    type="button"
+    id="retry-system"
+    class="primary-button">
+
+<i data-lucide="refresh-cw"></i>
+
+<span>
+Réessayer
+</span>
+
+</button>
+
+</section>
+
+
+</main>
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+<script src="js/helpers.js"></script>
+<script src="js/toast.js"></script>
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/sidebar.js"></script>
+<script src="js/system.js"></script>
+<script src="js/page-boot.js"></script>
+</body>
+
+</html>

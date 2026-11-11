@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0">
+
+<meta
+    http-equiv="X-UA-Compatible"
+    content="IE=edge">
+
+<meta
+    name="description"
+    content="Statistiques Nexa Manga - Administration">
+
+<meta
+    name="theme-color"
+    content="#7C5CFF">
+
+<title>Statistiques • Nexa Manga</title>
+
+<link
+    rel="icon"
+    type="image/png"
+    href="assets/logo.png">
+
+<link
+    rel="preconnect"
+    href="https://fonts.googleapis.com">
+
+<link
+    rel="preconnect"
+    href="https://fonts.gstatic.com"
+    crossorigin>
+
+<link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet">
+
+<link
+    rel="stylesheet"
+    href="css/dashboard.css">
+
+<link
+    rel="stylesheet"
+    href="css/statistics.css">
+
+
+
+
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://telegram.org; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com data:; img-src 'self' data: https: http:; connect-src 'self' https:; object-src 'none'; base-uri 'self'; form-action 'self'">
+<script src="../js/config.js"></script>
+<script src="js/safe-html.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js" defer></script>
+</head>
+
+<body>
+
+<div class="dashboard">
+
+<aside
+    class="sidebar"
+    aria-label="Navigation principale">
+
+</aside>
+
+<main class="main-content">
+
+<header class="topbar">
+
+<div class="page-title">
+
+<h1>
+Statistiques
+</h1>
+
+<p>
+Analysez les performances et l'activité de Nexa Manga.
+</p>
+
+</div>
+
+<div class="topbar-actions">
+
+<button
+    type="button"
+    id="refresh-statistics"
+    class="secondary-button"
+    aria-label="Actualiser les statistiques">
+
+    <i data-lucide="refresh-cw"></i>
+
+    <span>
+    Actualiser
+    </span>
+
+</button>
+
+</div>
+
+</header>
+
+
+<section
+    class="statistics-filters"
+    aria-label="Filtres statistiques">
+
+<div class="date-range">
+
+<button
+    type="button"
+    class="range-button active"
+    data-range="7">
+7 jours
+</button>
+
+<button
+    type="button"
+    class="range-button"
+    data-range="30">
+30 jours
+</button>
+
+<button
+    type="button"
+    class="range-button"
+    data-range="90">
+90 jours
+</button>
+
+<button
+    type="button"
+    class="range-button"
+    data-range="365">
+1 an
+</button>
+
+</div>
+
+</section>
+
+
+<section
+    class="statistics-cards"
+    aria-label="Indicateurs principaux">
+
+<article class="stat-card">
+
+<div class="stat-icon users">
+
+<i data-lucide="users"></i>
+
+</div>
+
+<div class="stat-content">
+
+<span>
+Utilisateurs
+</span>
+
+<strong id="stat-users">
+0
+</strong>
+
+<small id="stat-users-change">
+0%
+</small>
+
+</div>
+
+</article>
+
+
+<article class="stat-card">
+
+<div class="stat-icon mangas">
+
+<i data-lucide="book-open"></i>
+
+</div>
+
+<div class="stat-content">
+
+<span>
+Mangas
+</span>
+
+<strong id="stat-mangas">
+0
+</strong>
+
+<small id="stat-mangas-change">
+0%
+</small>
+
+</div>
+
+</article>
+
+
+<article class="stat-card">
+
+<div class="stat-icon chapters">
+
+<i data-lucide="layers"></i>
+
+</div>
+
+<div class="stat-content">
+
+<span>
+Chapitres
+</span>
+
+<strong id="stat-chapters">
+0
+</strong>
+
+<small id="stat-chapters-change">
+0%
+</small>
+
+</div>
+
+</article>
+
+
+<article class="stat-card">
+
+<div class="stat-icon views">
+
+<i data-lucide="eye"></i>
+
+</div>
+
+<div class="stat-content">
+
+<span>
+Vues
+</span>
+
+<strong id="stat-views">
+0
+</strong>
+
+<small id="stat-views-change">
+0%
+</small>
+
+</div>
+
+</article>
+
+</section>
+
+
+<section class="charts-grid">
+
+<article class="chart-card large">
+
+<div class="chart-header">
+
+<div>
+
+<h2>
+Activité des utilisateurs
+</h2>
+
+<p>
+Évolution de l'activité sur la période sélectionnée.
+</p>
+
+</div>
+
+<div class="chart-actions">
+
+<select
+    id="activity-metric"
+    class="chart-select"
+    aria-label="Métrique de l'activité">
+
+<option value="users">
+Utilisateurs
+</option>
+
+<option value="views">
+Vues
+</option>
+
+<option value="reading">
+Lectures
+</option>
+
+</select>
+
+</div>
+
+</div>
+
+<div class="chart-container">
+
+<canvas
+    id="activity-chart"
+    aria-label="Graphique de l'activité">
+</canvas>
+
+</div>
+
+</article>
+
+
+<article class="chart-card">
+
+<div class="chart-header">
+
+<div>
+
+<h2>
+Répartition des contenus
+</h2>
+
+<p>
+Distribution des contenus disponibles.
+</p>
+
+</div>
+
+</div>
+
+<div class="chart-container doughnut-container">
+
+<canvas
+    id="content-chart"
+    aria-label="Répartition des contenus">
+</canvas>
+
+</div>
+
+</article>
+
+</section>
+
+
+<section class="statistics-grid">
+
+<article class="data-card">
+
+<div class="data-card-header">
+
+<div>
+
+<h2>
+Mangas les plus lus
+</h2>
+
+<p>
+Classement des mangas par nombre de lectures.
+</p>
+
+</div>
+
+<i data-lucide="trending-up"></i>
+
+</div>
+
+<div
+    class="ranking-list"
+    id="top-manga-list">
+
+<div class="loading-state">
+Chargement...
+</div>
+
+</div>
+
+</article>
+
+
+<article class="data-card">
+
+<div class="data-card-header">
+
+<div>
+
+<h2>
+Utilisateurs les plus actifs
+</h2>
+
+<p>
+Utilisateurs ayant le plus d'activité.
+</p>
+
+</div>
+
+<i data-lucide="activity"></i>
+
+</div>
+
+<div
+    class="ranking-list"
+    id="top-users-list">
+
+<div class="loading-state">
+Chargement...
+</div>
+
+</div>
+
+</article>
+
+</section>
+
+<!--==================================
+ACTIVITY DETAILS
+===================================-->
+
+<section class="statistics-grid">
+
+<article class="data-card">
+
+<div class="data-card-header">
+
+<div>
+
+<h2>
+Activité de lecture
+</h2>
+
+<p>
+Progression des lectures sur la période.
+</p>
+
+</div>
+
+<i data-lucide="book-open-check"></i>
+
+</div>
+
+<div class="metric-list">
+
+<div class="metric-row">
+
+<div class="metric-label">
+
+<span>
+Lectures commencées
+</span>
+
+</div>
+
+<strong id="reading-started">
+0
+</strong>
+
+</div>
+
+
+<div class="metric-row">
+
+<div class="metric-label">
+
+<span>
+Lectures terminées
+</span>
+
+</div>
+
+<strong id="reading-completed">
+0
+</strong>
+
+</div>
+
+
+<div class="metric-row">
+
+<div class="metric-label">
+
+<span>
+Temps de lecture
+</span>
+
+</div>
+
+<strong id="reading-time">
+0 h
+</strong>
+
+</div>
+
+
+<div class="metric-row">
+
+<div class="metric-label">
+
+<span>
+Taux de complétion
+</span>
+
+</div>
+
+<strong id="completion-rate">
+0%
+</strong>
+
+</div>
+
+</div>
+
+</article>
+
+
+<article class="data-card">
+
+<div class="data-card-header">
+
+<div>
+
+<h2>
+Engagement
+</h2>
+
+<p>
+Interactions enregistrées sur la plateforme.
+</p>
+
+</div>
+
+<i data-lucide="heart-handshake"></i>
+
+</div>
+
+<div class="metric-list">
+
+<div class="metric-row">
+
+<div class="metric-label">
+
+<i data-lucide="message-circle"></i>
+
+<span>
+Commentaires
+</span>
+
+</div>
+
+<strong id="stat-comments">
+0
+</strong>
+
+</div>
+
+
+<div class="metric-row">
+
+<div class="metric-label">
+
+<i data-lucide="heart"></i>
+
+<span>
+Favoris
+</span>
+
+</div>
+
+<strong id="stat-favorites">
+0
+</strong>
+
+</div>
+
+
+<div class="metric-row">
+
+<div class="metric-label">
+
+<i data-lucide="bookmark"></i>
+
+<span>
+Ajouts en bibliothèque
+</span>
+
+</div>
+
+<strong id="stat-bookmarks">
+0
+</strong>
+
+</div>
+
+
+<div class="metric-row">
+
+<div class="metric-label">
+
+<i data-lucide="share-2"></i>
+
+<span>
+Partages
+</span>
+
+</div>
+
+<strong id="stat-shares">
+0
+</strong>
+
+</div>
+
+</div>
+
+</article>
+
+</section>
+
+
+<!--==================================
+TOP CATEGORIES
+===================================-->
+
+<section class="data-card">
+
+<div class="data-card-header">
+
+<div>
+
+<h2>
+Catégories les plus populaires
+</h2>
+
+<p>
+Catégories ayant enregistré le plus d'activité.
+</p>
+
+</div>
+
+<i data-lucide="tags"></i>
+
+</div>
+
+<div
+    class="category-list"
+    id="top-category-list">
+
+<div class="loading-state">
+Chargement...
+</div>
+
+</div>
+
+</section>
+
+
+<!--==================================
+RECENT ACTIVITY
+===================================-->
+
+<section class="data-card">
+
+<div class="data-card-header">
+
+<div>
+
+<h2>
+Activité récente
+</h2>
+
+<p>
+Dernières activités enregistrées sur Nexa Manga.
+</p>
+
+</div>
+
+<button
+    type="button"
+    id="view-all-activity"
+    class="secondary-button">
+
+    <span>
+    Voir tout
+    </span>
+
+    <i data-lucide="arrow-right"></i>
+
+</button>
+
+</div>
+
+
+<div class="table-container">
+
+<table class="admin-table">
+
+<thead>
+
+<tr>
+
+<th scope="col">
+Utilisateur
+</th>
+
+<th scope="col">
+Action
+</th>
+
+<th scope="col">
+Contenu
+</th>
+
+<th scope="col">
+Date
+</th>
+
+</tr>
+
+</thead>
+
+<tbody id="recent-activity-body">
+
+<tr>
+
+<td
+    colspan="4"
+    class="loading-row">
+
+    Chargement de l'activité...
+
+</td>
+
+</tr>
+
+</tbody>
+
+</table>
+
+</div>
+
+</section>
+
+
+<!--==================================
+PERFORMANCE SUMMARY
+===================================-->
+
+<section class="performance-grid">
+
+<article class="performance-card">
+
+<div class="performance-icon">
+
+<i data-lucide="user-plus"></i>
+
+</div>
+
+<div class="performance-content">
+
+<span>
+Nouveaux utilisateurs
+</span>
+
+<strong id="new-users">
+0
+</strong>
+
+<p id="new-users-change">
+0% sur la période
+</p>
+
+</div>
+
+</article>
+
+
+<article class="performance-card">
+
+<div class="performance-icon">
+
+<i data-lucide="book-plus"></i>
+
+</div>
+
+<div class="performance-content">
+
+<span>
+Nouveaux mangas
+</span>
+
+<strong id="new-mangas">
+0
+</strong>
+
+<p id="new-mangas-change">
+0% sur la période
+</p>
+
+</div>
+
+</article>
+
+
+<article class="performance-card">
+
+<div class="performance-icon">
+
+<i data-lucide="eye"></i>
+
+</div>
+
+<div class="performance-content">
+
+<span>
+Vues moyennes / manga
+</span>
+
+<strong id="average-views">
+0
+</strong>
+
+<p>
+Moyenne sur la période
+</p>
+
+</div>
+
+</article>
+
+
+<article class="performance-card">
+
+<div class="performance-icon">
+
+<i data-lucide="clock-3"></i>
+
+</div>
+
+<div class="performance-content">
+
+<span>
+Temps moyen de lecture
+</span>
+
+<strong id="average-reading-time">
+0 min
+</strong>
+
+<p>
+Par session
+</p>
+
+</div>
+
+</article>
+
+</section>
+
+<!--==================================
+NO DATA / ERROR CONTAINER
+===================================-->
+
+<section
+    id="statistics-state"
+    class="statistics-state hidden"
+    aria-live="polite">
+
+<div class="state-icon">
+
+<i data-lucide="bar-chart-3"></i>
+
+</div>
+
+<h2 id="statistics-state-title">
+Aucune donnée disponible
+</h2>
+
+<p id="statistics-state-message">
+Les statistiques ne sont pas encore disponibles.
+</p>
+
+<button
+    type="button"
+    id="retry-statistics"
+    class="primary-button">
+
+    <i data-lucide="refresh-cw"></i>
+
+    <span>
+    Réessayer
+    </span>
+
+</button>
+
+</section>
+
+
+</main>
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script src="js/helpers.js"></script>
+<script src="js/toast.js"></script>
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/sidebar.js"></script>
+<script src="js/statistics.js"></script>
+<script src="js/page-boot.js"></script>
+</body>
+
+</html>
