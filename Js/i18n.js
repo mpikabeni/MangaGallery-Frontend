@@ -37,6 +37,14 @@
       theme: "Thème", theme_auto: "Auto", theme_nexa: "Nexa", theme_light: "Clair", theme_amoled: "Noir pur", theme_sakura: "Sakura", theme_ocean: "Océan", theme_sunset: "Sunset",
       library: "Bibliothèque", community: "Communauté", nexa_channel: "Canal Nexa", about: "À propos", version: "Version", made_by: "Un projet Nexa", admin_mode: "Mode administrateur",
       just_now: "à l'instant", ch_short: "Ch. {n}",
+      landing_tag: "Mini app Telegram", landing_title: "Nexa Manga", landing_body: "Lis tes mangas et webtoons directement dans Telegram. Ouvre l'application depuis le bot pour te connecter.", open_in_telegram: "Ouvrir dans Telegram", preview_design: "Voir l'aperçu du design", demo_badge: "APERÇU DÉMO · DONNÉES FICTIVES", demo_exit: "Quitter l'aperçu", demo_login: "Invité démo", hello: "Salut {name}", wake_msg: "Le serveur se réveille… un instant", wake_slow: "Premier lancement : ça peut prendre jusqu'à 30 secondes.",
+      surprise: "Surprise", tile_browse: "Explorer", tab_chapters: "Chapitres", tab_comments: "Commentaires",
+      stat_chapters: "Chapitres", stat_status: "Statut", stat_update: "Mise à jour", read_progress: "{a}/{b} chapitres lus",
+      new_pill: "NOUVEAU", reader_mode: "Mode de lecture", reader_settings: "Lecture", mode_vertical: "Défilement", mode_paged: "Page par page",
+      swipe_hint: "Touche les bords ou glisse pour tourner les pages", zoom_hint: "Double-tape pour zoomer",
+      stats_favs: "Favoris", stats_read: "Chapitres lus", stats_started: "Mangas lus", view_grid: "Grille", view_list: "Liste",
+      not_found: "Contenu introuvable", sync_error: "Synchronisation impossible, réessaie.", sorry: "Désolé !",
+      list_title: "Toutes les séries", tagline_home: "Lis. Découvre. Partage.", no_comments_yet: "Aucun commentaire pour le moment",
     },
     en: {
       loading: "Loading…", retry: "Try again", cancel: "Cancel", confirm: "Confirm", close: "Close",
@@ -73,6 +81,14 @@
       theme: "Theme", theme_auto: "Auto", theme_nexa: "Nexa", theme_light: "Light", theme_amoled: "Pure black", theme_sakura: "Sakura", theme_ocean: "Ocean", theme_sunset: "Sunset",
       library: "Library", community: "Community", nexa_channel: "Nexa channel", about: "About", version: "Version", made_by: "A Nexa project", admin_mode: "Administrator mode",
       just_now: "just now", ch_short: "Ch. {n}",
+      landing_tag: "Telegram mini app", landing_title: "Nexa Manga", landing_body: "Read your manga and webtoons right inside Telegram. Open the app from the bot to sign in.", open_in_telegram: "Open in Telegram", preview_design: "Preview the design", demo_badge: "DEMO PREVIEW · SAMPLE DATA", demo_exit: "Exit preview", demo_login: "Demo guest", hello: "Hi {name}", wake_msg: "Waking the server up… one moment", wake_slow: "First launch: this can take up to 30 seconds.",
+      surprise: "Surprise", tile_browse: "Browse", tab_chapters: "Chapters", tab_comments: "Comments",
+      stat_chapters: "Chapters", stat_status: "Status", stat_update: "Updated", read_progress: "{a}/{b} chapters read",
+      new_pill: "NEW", reader_mode: "Reading mode", reader_settings: "Reader", mode_vertical: "Scroll", mode_paged: "Page by page",
+      swipe_hint: "Tap the edges or swipe to turn pages", zoom_hint: "Double-tap to zoom",
+      stats_favs: "Favorites", stats_read: "Chapters read", stats_started: "Series read", view_grid: "Grid", view_list: "List",
+      not_found: "Content not found", sync_error: "Could not sync, try again.", sorry: "Sorry!",
+      list_title: "All series", tagline_home: "Read. Discover. Share.", no_comments_yet: "No comments yet",
     },
   };
 
@@ -95,8 +111,9 @@
     if (vars) for (const k in vars) s = s.split("{" + k + "}").join(vars[k]);
     return s;
   }
-  function setPref(p) { try { localStorage.setItem(PREF_KEY, p); } catch (_) {} apply(); }
 
   apply();
-  window.I18n = { t, setPref, pref, lang: () => current, apply };
+  function setPrefQuiet(p) { try { localStorage.setItem(PREF_KEY, p); } catch (_) {} apply(); }
+  window.I18n = { t, pref, lang: () => current, apply, setQuiet: setPrefQuiet,
+    set(p) { setPrefQuiet(p); if (typeof window.I18n.onChange === "function") window.I18n.onChange(p); }, onChange: null };
 })();

@@ -1,4 +1,4 @@
-/* Nexa Manga - themes. "auto" follows the Telegram light/dark scheme. */
+/* Nexa Manga - themes. "auto" follows the Telegram light/dark scheme. Switching animates as a circular reveal. */
 (function () {
   "use strict";
   const KEY = "nexa:theme";
@@ -11,6 +11,7 @@
     { id: "sunset", colors: ["#140a0a", "#ff7a45", "#ffc857"] },
   ];
   const ids = THEMES.map((t) => t.id);
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   function pref() { try { return localStorage.getItem(KEY) || "auto"; } catch (_) { return "auto"; } }
   function resolve(p) {
@@ -28,8 +29,22 @@
     const tg = window.Telegram && Telegram.WebApp;
     if (tg) { try { tg.setHeaderColor(bg); tg.setBackgroundColor(bg); tg.setBottomBarColor && tg.setBottomBarColor(bg); } catch (_) {} }
   }
-  function set(p) { try { localStorage.setItem(KEY, p); } catch (_) {} apply(); }
+  function store(p) { try { localStorage.setItem(KEY, p); } catch (_) {} }
+  /** Set from the server (no echo back, no animation). */
+  function setQuiet(p) { store(p); apply(); }
+  /** User action: animated circular reveal from the tap point when the browser supports it. */
+  function set(p, ev, after) {
+    store(p);
+    const run = () => { apply(); if (after) after(); };
+    if (document.startViewTransition && !reduce) {
+      const x = ev && ev.clientX != null ? ev.clientX : innerWidth / 2, y = ev && ev.clientY != null ? ev.clientY : innerHeight / 2;
+      document.documentElement.style.setProperty("--tx", x + "px");
+      document.documentElement.style.setProperty("--ty", y + "px");
+      try { document.startViewTransition(run); } catch (_) { run(); }
+    } else run();
+    if (typeof window.Theme.onChange === "function") window.Theme.onChange(p);
+  }
 
   apply();
-  window.Theme = { THEMES, pref, set, apply };
+  window.Theme = { THEMES, pref, set, setQuiet, apply, onChange: null };
 })();
