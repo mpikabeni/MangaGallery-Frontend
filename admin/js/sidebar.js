@@ -20,13 +20,13 @@
     const aside = document.querySelector("aside.sidebar");
     if (!aside) return;
     const here = (location.pathname.split("/").pop() || "index.html").toLowerCase();
-    const version = (window.NEXA_CONFIG && window.NEXA_CONFIG.version) || "V2.05";
+    const version = (window.NEXA_CONFIG && window.NEXA_CONFIG.version) || "Finale";
     const logout = el("button", { type: "button", id: "logout-button", class: "icon-button", title: "Déconnexion" }, icon("log-out"));
     logout.addEventListener("click", () => window.secureLogout());
     aside.replaceChildren(
       el("div", { class: "sidebar-logo" }, el("a", { href: "index.html", class: "logo-link" },
         el("img", { src: "assets/logo.png", alt: "Nexa", class: "logo-image" }),
-        el("div", { class: "logo-text" }, el("h2", { text: "Nexa Manga" }), el("p", { text: "ADMIN " + version })))),
+        el("div", { class: "logo-text" }, el("h2", { text: "Manga Gallery FR" }), el("p", { text: "ADMIN " + version })))),
       el("nav", { class: "sidebar-menu", id: "sidebar-menu" }, ...MENU.map(([href, ic, label]) =>
         el("a", { href, class: "menu-item" + (here === href ? " active" : ""), "data-page": href.replace(".html", "") }, icon(ic), el("span", { text: label })))),
       el("div", { class: "sidebar-footer" },

@@ -1,7 +1,7 @@
 /* Nexa Admin - authentication. The admin signs in through Telegram (same session as the mini app).
  * Access is decided by the server (user.is_admin); the checks below only drive navigation. */
 "use strict";
-const NEXA_VERSION = (window.NEXA_CONFIG && window.NEXA_CONFIG.version) || "V2.05";
+const NEXA_VERSION = (window.NEXA_CONFIG && window.NEXA_CONFIG.version) || "Finale";
 
 function isAuthenticated() { return !!window.API.getToken(); }
 

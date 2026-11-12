@@ -5,6 +5,7 @@
   const INIT = {
     notifications: "initializeNotificationsPage", reports: "initializeReportsPage", settings: "initializeSettingsPage",
     statistics: "initializeStatisticsPage", system: "initializeSystemPage", index: "initializeDashboardPage",
+    mangas: "initializeMangasPage", chapters: "initializeChaptersPage",
   };
   document.addEventListener("DOMContentLoaded", async () => {
     const page = (location.pathname.split("/").pop() || "index.html").replace(".html", "");
