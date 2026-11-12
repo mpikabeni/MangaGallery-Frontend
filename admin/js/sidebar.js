@@ -33,6 +33,7 @@
         el("div", { class: "admin-mini-profile" },
           el("div", { class: "admin-info" }, el("h4", { id: "sidebarName", text: (user && (user.name || user.username)) || "Admin" }), el("p", { id: "sidebarRole", text: "Administrateur" })),
           logout),
-        el("a", { href: "../index.html#/settings", class: "menu-item", style: "margin-top:8px" }, icon("arrow-left"), el("span", { text: "Retour à l'application" }))));
+        el("a", { href: "../index.html#/settings", class: "menu-item", style: "margin-top:8px" }, icon("arrow-left"), el("span", { text: "Retour à l'application" })),
+        window.buildThemePicker ? window.buildThemePicker() : null));
   };
 })();

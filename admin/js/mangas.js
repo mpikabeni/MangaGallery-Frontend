@@ -43,6 +43,8 @@ function bindEvents() {
   $("manga-section").addEventListener("change", () => paintFormTypes());
   $("manga-title").addEventListener("input", () => { if (!mangaState.editing) $("manga-slug").value = slugify($("manga-title").value); });
   $("manga-cover").addEventListener("input", previewCover);
+  $("manga-cover-file").addEventListener("change", (e) => pickImage(e, "cover", "manga-cover", "cover-btn-label"));
+  $("manga-banner-file").addEventListener("change", (e) => pickImage(e, "banner", "manga-banner", "banner-btn-label"));
   $("previous-page").addEventListener("click", () => { if (mangaState.page > 1) { mangaState.page--; loadMangas(); } });
   $("next-page").addEventListener("click", () => { if (mangaState.page < mangaState.totalPages) { mangaState.page++; loadMangas(); } });
 }
@@ -118,19 +120,42 @@ function updatePagination() {
   $("previous-page").disabled = mangaState.page === 1; $("next-page").disabled = mangaState.page === mangaState.totalPages;
 }
 
+/* ------------------------------------------------------------------ uploads */
+const unsaved = new Set();            // uploaded during this modal session but not saved yet
+const discard = (urls) => { urls = [...urls]; if (urls.length) api.post("/api/uploads/discard", { urls }).catch(() => {}); };
+
+async function pickImage(event, kind, inputId, labelId) {
+  const input = event.target, file = input.files && input.files[0];
+  if (!file) return;
+  const label = $(labelId), original = label.textContent;
+  label.textContent = "Envoi en cours…";
+  try {
+    const fd = new FormData(); fd.append("file", file); fd.append("kind", kind);
+    const r = await api.upload("/api/uploads/image", fd, (p) => { label.textContent = `Envoi… ${Math.round(p * 100)} %`; });
+    const old = $(inputId).value.trim();
+    if (unsaved.has(old)) { unsaved.delete(old); discard([old]); }       // replaced before saving: free it
+    $(inputId).value = r.url; unsaved.add(r.url);
+    label.textContent = "Image envoyée ✓ (changer)";
+    previewCover();
+  } catch (e) { console.error(e); label.textContent = original; showError(e.message || "Envoi impossible."); }
+  finally { input.value = ""; }
+}
+
 /* ------------------------------------------------------------------ modal */
 function previewCover() { const u = $("manga-cover").value.trim(); $("cover-preview").src = validUrl(u) ? u : "assets/default-cover.png"; }
 function openCreateModal() {
   mangaState.editing = null;
   $("manga-form").reset();
   $("manga-id").value = "";
+  resetLabels();
   $("manga-section").value = mangaState.section;           // on publie dans l'onglet courant
   paintFormTypes(mangaState.type || undefined);
   $("modal-title").textContent = mangaState.section === "sainte_culture" ? "Publier dans La Sainte Culture (18+)" : "Publier dans la Galerie";
   previewCover();
   $("manga-modal").classList.remove("hidden");
 }
-function closeModal() { $("manga-modal").classList.add("hidden"); }
+function closeModal() { $("manga-modal").classList.add("hidden"); discard(unsaved); unsaved.clear(); resetLabels(); }
+function resetLabels() { $("cover-btn-label").textContent = "Téléverser une image"; $("banner-btn-label").textContent = "Téléverser une image"; }
 
 async function editManga(id) {
   try {
@@ -169,6 +194,7 @@ async function saveManga(event) {
   try {
     if (mangaState.editing) { await api.put(`/api/mangas/${mangaState.editing}`, payload); showSuccess("Titre modifié."); }
     else { await api.post("/api/mangas", payload); showSuccess(payload.section === "sainte_culture" ? "Publié dans La Sainte Culture." : "Publié dans la Galerie."); }
+    unsaved.clear();                                         // saved: these images now belong to the title
     closeModal();
     mangaState.section = payload.section;                    // montre directement l'espace où l'on vient de publier
     document.querySelectorAll("#section-tabs .tab").forEach((t) => t.classList.toggle("active", t.dataset.section === payload.section));

@@ -6,6 +6,9 @@ const $ = (id) => document.getElementById(id);
 const mangaLabel = (m) => m.title + (m.section === "sainte_culture" ? " · La Sainte Culture 18+" : "");
 const validUrl = (u) => /^https?:\/\/[^\s<>"']+$/i.test(u);
 const pageLines = () => $("chapter-pages").value.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+let pageUrls = [];                      // pages already stored (uploaded files or existing chapter), in reading order
+const unsaved = new Set();              // uploaded in this modal session, not saved yet
+const discard = (urls) => { urls = [...urls]; if (urls.length) api.post("/api/uploads/discard", { urls }).catch(() => {}); };
 const cell = (tr, content) => { const td = document.createElement("td"); if (content instanceof Node) td.append(content); else td.textContent = content == null ? "" : String(content); tr.append(td); return td; };
 
 async function initializeChaptersPage() {
@@ -26,6 +29,13 @@ function bindEvents() {
   $("cancel-chapter-button").addEventListener("click", closeModal);
   $("close-chapter-modal").addEventListener("click", closeModal);
   $("chapter-pages").addEventListener("input", renderPreview);
+  const zone = $("dropzone"), input = $("chapter-files");
+  zone.addEventListener("click", () => input.click());
+  zone.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); input.click(); } });
+  ["dragenter", "dragover"].forEach((t) => zone.addEventListener(t, (e) => { e.preventDefault(); zone.classList.add("over"); }));
+  ["dragleave", "drop"].forEach((t) => zone.addEventListener(t, (e) => { e.preventDefault(); zone.classList.remove("over"); }));
+  zone.addEventListener("drop", (e) => uploadFiles(e.dataTransfer.files));
+  input.addEventListener("change", () => { uploadFiles(input.files); input.value = ""; });
   $("previous-page").addEventListener("click", () => { if (chapterState.page > 1) { chapterState.page--; loadChapters(); } });
   $("next-page").addEventListener("click", () => { if (chapterState.page < chapterState.totalPages) { chapterState.page++; loadChapters(); } });
 }
@@ -79,20 +89,56 @@ function updatePagination() {
   $("previous-page").disabled = chapterState.page === 1; $("next-page").disabled = chapterState.page === chapterState.totalPages;
 }
 
+async function uploadFiles(fileList) {
+  const files = [...(fileList || [])];
+  if (!files.length) return;
+  const bar = $("upload-bar"), box = $("upload-progress"), label = $("upload-label"), zone = $("dropzone");
+  const size = files.reduce((n, f) => n + f.size, 0);
+  const fd = new FormData(); files.forEach((f) => fd.append("files", f));
+  box.classList.remove("hidden"); zone.classList.add("busy"); bar.style.width = "0%";
+  label.textContent = `Envoi de ${files.length} fichier(s) · ${(size / 1048576).toFixed(1)} Mo…`;
+  try {
+    const r = await api.upload("/api/uploads/chapter", fd, (p) => {
+      bar.style.width = Math.round(p * 100) + "%";
+      label.textContent = p < 1 ? `Envoi… ${Math.round(p * 100)} %` : "Traitement des pages (PDF / archive) sur le serveur…";
+    });
+    pageUrls = pageUrls.concat(r.pages); r.pages.forEach((u) => unsaved.add(u));
+    renderPreview();
+    showSuccess(`${r.count} page(s) ajoutée(s).` + (r.skipped && r.skipped.length ? ` ${r.skipped.length} ignorée(s).` : ""));
+  } catch (e) { console.error(e); showError(e.message || "Envoi impossible."); }
+  finally { box.classList.add("hidden"); zone.classList.remove("busy"); }
+}
+
+function allPages() { return pageUrls.concat(pageLines()); }
+
+function movePage(i, d) { const j = i + d; if (j < 0 || j >= pageUrls.length) return; [pageUrls[i], pageUrls[j]] = [pageUrls[j], pageUrls[i]]; renderPreview(); }
+function removePage(i) {
+  const [u] = pageUrls.splice(i, 1);
+  if (unsaved.has(u)) { unsaved.delete(u); discard([u]); }
+  renderPreview();
+}
+
 function renderPreview() {
-  const lines = pageLines();
-  $("pages-count").textContent = `${lines.length} page(s)`;
+  const total = allPages().length;
+  $("pages-count").textContent = `${total} page(s)`;
   const grid = $("preview-grid"); grid.replaceChildren();
-  lines.slice(0, 60).forEach((u, i) => {
+  pageUrls.concat(pageLines()).slice(0, 400).forEach((u, i) => {
     const card = document.createElement("div"); card.className = "preview-item";
     if (validUrl(u)) { const img = document.createElement("img"); img.src = u; img.alt = `Page ${i + 1}`; img.loading = "lazy"; img.referrerPolicy = "no-referrer"; card.append(img); }
     const n = document.createElement("span"); n.className = "preview-number"; n.textContent = String(i + 1); card.append(n);
+    if (i < pageUrls.length) {   // stored pages can be reordered / removed; pasted links are edited in the text box
+      const tools = document.createElement("div"); tools.className = "page-tools";
+      [["‹", "Reculer", () => movePage(i, -1)], ["›", "Avancer", () => movePage(i, 1)], ["✕", "Retirer", () => removePage(i)]].forEach(([t, title, fn]) => {
+        const b = document.createElement("button"); b.type = "button"; b.textContent = t; b.title = title; b.addEventListener("click", fn); tools.append(b);
+      });
+      card.append(tools);
+    }
     grid.append(card);
   });
 }
 
 function openCreateModal() {
-  chapterState.editing = null; $("chapter-form").reset(); $("chapter-id").value = "";
+  chapterState.editing = null; $("chapter-form").reset(); $("chapter-id").value = ""; pageUrls = []; unsaved.clear();
   $("chapter-manga").disabled = false;
   if (chapterState.manga) $("chapter-manga").value = chapterState.manga;
   const forManga = chapterState.items.filter((c) => String(c.manga_id) === String($("chapter-manga").value)).map((c) => Number(c.number));
@@ -100,7 +146,7 @@ function openCreateModal() {
   $("chapter-modal-title").textContent = "Ajouter un chapitre";
   renderPreview(); $("chapter-modal").classList.remove("hidden");
 }
-function closeModal() { $("chapter-modal").classList.add("hidden"); }
+function closeModal() { $("chapter-modal").classList.add("hidden"); discard(unsaved); unsaved.clear(); }
 
 async function editChapter(id) {
   try {
@@ -111,15 +157,16 @@ async function editChapter(id) {
     $("chapter-number").value = c.number; $("chapter-title").value = c.title || "";
     $("chapter-status").value = c.status === "draft" ? "draft" : "published";
     $("chapter-visibility").value = c.visibility === "public" ? "public" : "hidden";
-    $("chapter-pages").value = (c.pages || []).join("\n");
+    pageUrls = (c.pages || []).slice(); unsaved.clear(); $("chapter-pages").value = "";
     renderPreview(); $("chapter-modal").classList.remove("hidden");
   } catch (e) { console.error(e); showError(e.message || "Impossible de charger le chapitre."); }
 }
 
 async function saveChapter(event) {
   event.preventDefault();
-  const pages = pageLines();
-  if (pages.some((u) => !validUrl(u))) return showError("Chaque page doit être un lien http(s) valide (une par ligne).");
+  const pages = allPages();
+  if (pageLines().some((u) => !validUrl(u))) return showError("Chaque lien doit être une adresse http(s) valide (un par ligne).");
+  if (!pages.length) return showError("Ajoute au moins une page (téléverse un PDF, un CBZ ou des images).");
   const payload = { number: Number($("chapter-number").value), title: $("chapter-title").value.trim() || null,
     status: $("chapter-status").value, visibility: $("chapter-visibility").value, pages };
   const btn = $("save-chapter-button"); btn.disabled = true;
@@ -130,6 +177,7 @@ async function saveChapter(event) {
       if (!payload.manga_id) { showError("Choisis un titre."); return; }
       await api.post("/api/chapters", payload); showSuccess("Chapitre publié.");
     }
+    unsaved.clear();                                       // saved: the pages now belong to the chapter
     closeModal(); await loadChapters();
   } catch (e) { console.error(e); showError(e.message || "Impossible d'enregistrer le chapitre."); }
   finally { btn.disabled = false; }

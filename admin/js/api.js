@@ -70,12 +70,37 @@
   const send = (method, path, data, options = {}) =>
     request(path, Object.assign({}, options, { method, body: data === undefined ? undefined : (data instanceof FormData ? data : JSON.stringify(data)) }));
 
+  /** multipart upload with progress (fetch cannot report it). Resolves with the parsed JSON body. */
+  function upload(path, formData, onProgress) {
+    const attempt = (tok) => new Promise((resolve, reject) => {
+      const x = new XMLHttpRequest();
+      x.open("POST", BASE + "/" + norm(path));
+      x.setRequestHeader("Accept", "application/json");
+      if (tok) x.setRequestHeader("Authorization", "Bearer " + tok);
+      x.timeout = 15 * 60 * 1000;
+      if (x.upload && onProgress) x.upload.onprogress = (e) => { if (e.lengthComputable) onProgress(e.loaded / e.total); };
+      x.onload = () => { let body = {}; try { body = JSON.parse(x.responseText); } catch (_) {} resolve({ status: x.status, body }); };
+      x.onerror = () => reject(new Error("Connexion au serveur impossible."));
+      x.ontimeout = () => reject(new Error("Le serveur met trop de temps à répondre."));
+      x.send(formData);
+    });
+    return (async () => {
+      let r = await attempt(token());
+      if (r.status === 401 && (await renew())) r = await attempt(token());
+      if (r.status === 413) throw new Error("Fichier trop volumineux (150 Mo maximum par envoi).");
+      if (r.status >= 400 || (r.body && r.body.success === false)) {
+        const e = new Error((r.body && r.body.message) || `Erreur API (${r.status})`); e.status = r.status; throw e;
+      }
+      return r.body;
+    })();
+  }
+
   window.API = {
     get: (p, params, o = {}) => request(p + qs(params), Object.assign({}, o, { method: "GET" })),
     post: (p, d, o) => send("POST", p, d, o), put: (p, d, o) => send("PUT", p, d, o),
     patch: (p, d, o) => send("PATCH", p, d, o), delete: (p, o) => send("DELETE", p, undefined, o),
     setTokens, clearTokens: clear, getToken: token, initData, config: { baseUrl: BASE },
-    raw: rawFetch,
+    raw: rawFetch, upload,
   };
   window.api = window.API;
 })();
