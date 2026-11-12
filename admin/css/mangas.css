@@ -1178,3 +1178,10 @@ border-radius:999px;
 /*==================================
 READY FOR PRODUCTION
 ==================================*/
+/*==================================
+SECTION TABS (Galerie / La Sainte Culture)
+==================================*/
+.section-tabs{display:inline-flex;gap:6px;padding:4px;border-radius:14px;background:var(--card);border:1px solid var(--border)}
+.section-tabs .tab{border:0;cursor:pointer;padding:9px 16px;border-radius:10px;background:transparent;color:var(--text-secondary);font:600 13px Poppins,Arial,sans-serif;transition:var(--transition)}
+.section-tabs .tab.active{background:var(--primary);color:#fff}
+.section-tabs .tab.adult.active{background:linear-gradient(135deg,#8a1230,#c2185b)}
