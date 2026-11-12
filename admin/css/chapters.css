@@ -1166,3 +1166,20 @@ padding-bottom:max(30px,env(safe-area-inset-bottom));
 /*==================================
 READY FOR PRODUCTION
 ==================================*/
+
+/* uploads */
+.dropzone{display:grid;justify-items:center;gap:6px;padding:26px 16px;text-align:center;border:2px dashed var(--border);border-radius:18px;cursor:pointer;transition:var(--transition)}
+.dropzone:hover,.dropzone.over,.dropzone:focus-visible{border-color:var(--primary);background:color-mix(in srgb,var(--primary) 10%,transparent);outline:0}
+.dropzone.busy{opacity:.6;pointer-events:none}
+.dropzone svg,.dropzone i{width:30px;height:30px;color:var(--primary)}
+.dropzone span{font-size:13px;color:var(--text-secondary)}
+.upload-progress{margin-top:10px;display:grid;gap:6px;font-size:13px;color:var(--text-secondary)}
+.upload-progress .bar{height:8px;border-radius:99px;background:var(--border);overflow:hidden}
+.upload-progress .bar i{display:block;height:100%;width:0;background:var(--primary);transition:width .2s}
+.links-box{margin-top:10px}.links-box summary{cursor:pointer;color:var(--text-secondary);font-size:13px}.links-box textarea{margin-top:8px}
+.preview-item{position:relative}
+.page-tools{position:absolute;left:6px;right:6px;bottom:6px;display:flex;gap:4px;justify-content:center;opacity:0;transition:opacity .15s}
+.preview-item:hover .page-tools,.preview-item:focus-within .page-tools{opacity:1}
+.page-tools button{border:0;cursor:pointer;min-width:28px;height:28px;border-radius:9px;background:rgba(0,0,0,.72);color:#fff;font-size:15px}
+.page-tools button:hover{background:var(--primary)}
+@media (hover:none){.page-tools{opacity:1}}

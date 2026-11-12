@@ -1,0 +1,152 @@
+/* Manga Gallery FR admin — the SAME "Aurora glass" look and the SAME 6 themes as the mini app.
+ * Loaded last on every admin page: it maps the old admin variables onto the mini app tokens (css/themes.css)
+ * and restyles the shared components. Theme choice is shared with the app (localStorage "nexa:theme"). */
+:root {
+  --primary: var(--accent);
+  --primary-dark: color-mix(in srgb, var(--accent) 72%, #000);
+  --success: var(--ok);
+  --warning: #f59e0b;
+  --info: var(--accent-2);
+  --card: color-mix(in srgb, var(--surface) 78%, transparent);
+  --card-hover: color-mix(in srgb, var(--elev) 88%, transparent);
+  --background: var(--bg);
+  --border: var(--line);
+  --text-secondary: var(--muted);
+  --sidebar: color-mix(in srgb, var(--surface) 84%, transparent);
+  --radius: 20px;
+  --transition: .25s cubic-bezier(.2, .8, .2, 1);
+  --glow: color-mix(in srgb, var(--accent) 38%, transparent);
+}
+
+html { color-scheme: dark light; }
+body, button, input, select, textarea {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+}
+body { background: var(--bg) !important; color: var(--text) !important; transition: background-color .5s; }
+.dashboard, .main-content { background: transparent !important; }
+::selection { background: color-mix(in srgb, var(--accent) 40%, transparent); }
+
+/* ---------- aurora background (same as the app) ---------- */
+.aurora { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
+.aurora .orb { position: absolute; width: 62vmax; height: 62vmax; border-radius: 50%; filter: blur(90px); opacity: .26; animation: orbdrift 26s ease-in-out infinite alternate; }
+.aurora .orb.a { background: var(--accent); top: -24vmax; left: -20vmax; }
+.aurora .orb.b { background: var(--accent-2); right: -28vmax; top: 22vh; animation-duration: 33s; animation-delay: -8s; opacity: .2; }
+.aurora .orb.c { background: var(--accent); bottom: -34vmax; left: 6vw; animation-duration: 40s; animation-delay: -16s; opacity: .13; }
+[data-theme="light"] .aurora .orb, [data-theme="sakura"] .aurora .orb { opacity: .17; }
+[data-theme="amoled"] .aurora .orb { opacity: .12; }
+@keyframes orbdrift { to { transform: translate3d(9vmax, 7vmax, 0) scale(1.18); } }
+@media (prefers-reduced-motion: reduce) { .aurora .orb { animation: none; } }
+
+/* ---------- glass surfaces ---------- */
+.sidebar { background: var(--sidebar) !important; border-right: 1px solid var(--line) !important; backdrop-filter: blur(22px) saturate(1.4); -webkit-backdrop-filter: blur(22px) saturate(1.4); }
+.toolbar, .table-section, .stats-card, .dashboard-card, .chart-card, .data-card-header, .media-card, .system-logs, .service-status,
+.profile-preview, .theme-preview, .report-type, .permission-item, .empty-state, .detail-row, .statistics-filters {
+  background: var(--card) !important; border: 1px solid var(--line) !important; border-radius: 22px !important;
+  backdrop-filter: blur(16px) saturate(1.3); -webkit-backdrop-filter: blur(16px) saturate(1.3); box-shadow: var(--shadow);
+}
+.modal { background: rgba(0, 0, 0, .55) !important; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+.modal-content, .confirm-modal-content {
+  background: color-mix(in srgb, var(--elev) 96%, transparent) !important; border: 1px solid var(--line) !important;
+  border-radius: 26px !important; box-shadow: 0 30px 80px rgba(0, 0, 0, .5); color: var(--text);
+}
+.modal-header { border-bottom: 1px solid var(--line) !important; }
+.topbar { background: transparent !important; }
+.page-title h1 { letter-spacing: -.02em; font-weight: 800; }
+.page-title p { color: var(--muted) !important; }
+
+/* ---------- sidebar ---------- */
+.sidebar-logo h2 { font-weight: 800; letter-spacing: -.01em; }
+.sidebar-logo p { color: var(--muted) !important; letter-spacing: .16em; font-size: 11px; font-weight: 700; }
+.sidebar-menu a, .menu-item { border-radius: 15px !important; color: var(--muted) !important; transition: var(--transition); }
+.sidebar-menu a:hover, .menu-item:hover { background: color-mix(in srgb, var(--accent) 12%, transparent) !important; color: var(--text) !important; }
+.sidebar-menu a.active, .menu-item.active {
+  background: linear-gradient(135deg, var(--accent), var(--accent-2)) !important; color: var(--on-accent) !important;
+  box-shadow: 0 10px 26px var(--glow);
+}
+.sidebar-footer { border-top: 1px solid var(--line) !important; }
+
+/* theme picker (sidebar) */
+.theme-picker { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px 4px 4px; }
+.theme-picker button { width: 28px; height: 28px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; padding: 0;
+  background: linear-gradient(135deg, var(--c1) 0 50%, var(--c2) 50% 100%); box-shadow: 0 0 0 1px var(--line); transition: transform .2s; }
+.theme-picker button:hover { transform: scale(1.12); }
+.theme-picker button.on { border-color: var(--text); }
+.theme-picker button.auto { background: conic-gradient(var(--accent), var(--accent-2), var(--accent)); }
+.theme-picker small { width: 100%; color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+
+/* ---------- buttons ---------- */
+.primary-button, button.primary-button {
+  background: linear-gradient(120deg, var(--accent), var(--accent-2)) !important; color: var(--on-accent) !important;
+  border: 0 !important; border-radius: 16px !important; font-weight: 700 !important; box-shadow: 0 10px 28px var(--glow); transition: var(--transition);
+}
+.primary-button:hover { transform: translateY(-1px); filter: brightness(1.06); }
+.primary-button:active { transform: scale(.96); }
+.secondary-button, .icon-button, .range-button, .logout-button {
+  background: color-mix(in srgb, var(--elev) 80%, transparent) !important; border: 1px solid var(--line) !important;
+  color: var(--text) !important; border-radius: 15px !important; transition: var(--transition);
+}
+.secondary-button:hover, .icon-button:hover, .range-button:hover { border-color: var(--accent) !important; color: var(--accent) !important; }
+.range-button.active { background: linear-gradient(135deg, var(--accent), var(--accent-2)) !important; color: var(--on-accent) !important; border-color: transparent !important; }
+.action-button, .action-btn { border-radius: 12px !important; transition: var(--transition); }
+.primary-button[disabled], .secondary-button[disabled], button[disabled] { opacity: .5; }
+
+/* ---------- forms ---------- */
+input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="range"]), select, textarea {
+  background: color-mix(in srgb, var(--elev) 72%, transparent) !important; color: var(--text) !important;
+  border: 1px solid var(--line) !important; border-radius: 14px !important; transition: var(--transition);
+}
+input:focus, select:focus, textarea:focus { outline: 0 !important; border-color: var(--accent) !important; box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent) !important; }
+input::placeholder, textarea::placeholder { color: var(--muted); opacity: .8; }
+select option { background: var(--elev); color: var(--text); }
+.form-group label { color: var(--muted) !important; font-weight: 600; }
+.search-box { background: color-mix(in srgb, var(--elev) 72%, transparent) !important; border: 1px solid var(--line) !important; border-radius: 15px !important; }
+.search-box input { background: transparent !important; border: 0 !important; box-shadow: none !important; }
+.filter-select { border-radius: 14px !important; }
+.switch input:checked + .slider, .switch input:checked + span { background: var(--accent) !important; }
+
+/* ---------- tables ---------- */
+.admin-table th { color: var(--muted) !important; background: transparent !important; text-transform: uppercase; font-size: 11.5px; letter-spacing: .08em; font-weight: 700; }
+.admin-table th, .admin-table td { border-color: var(--line) !important; }
+.admin-table tbody tr { transition: background .2s; }
+.admin-table tbody tr:hover { background: color-mix(in srgb, var(--accent) 7%, transparent) !important; }
+.status, .role-badge, .role { border-radius: 999px !important; font-weight: 700; }
+.pagination-info { color: var(--muted); }
+.loading-row { color: var(--muted) !important; }
+.manga-cover img, .cover-preview img { border-radius: 14px; }
+
+/* ---------- la Sainte Culture tabs, uploads: follow the theme ---------- */
+.section-tabs { background: color-mix(in srgb, var(--elev) 75%, transparent) !important; border-color: var(--line) !important; border-radius: 16px !important; }
+.section-tabs .tab { font-family: inherit !important; color: var(--muted) !important; border-radius: 12px !important; }
+.section-tabs .tab.active { background: linear-gradient(135deg, var(--accent), var(--accent-2)) !important; color: var(--on-accent) !important; box-shadow: 0 8px 22px var(--glow); }
+.section-tabs .tab.adult.active { background: linear-gradient(135deg, #8a1230, #c2185b, #d98a1b) !important; color: #fff !important; box-shadow: 0 8px 22px rgba(194, 24, 91, .4); }
+.dropzone { background: color-mix(in srgb, var(--elev) 55%, transparent); }
+.upload-btn { background: color-mix(in srgb, var(--elev) 60%, transparent); }
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--muted) 35%, transparent); border-radius: 99px; }
+::-webkit-scrollbar-track { background: transparent; }
+
+/* ---------- layout polish (the original admin stacked every filter in a column and had no page margins) ---------- */
+.main-content { padding: 28px 32px 40px; }
+.topbar { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 22px; }
+.toolbar { display: flex !important; flex-direction: row !important; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px !important; padding: 14px 16px !important; margin-bottom: 22px !important; }
+.toolbar-left { display: flex !important; flex-direction: row !important; flex-wrap: wrap; align-items: center; gap: 10px !important; min-width: 0; }
+.toolbar-left .filter-select, .toolbar-left select { width: auto !important; min-width: 150px; max-width: 100%; padding: 10px 14px; }
+.toolbar-left .search-box { width: auto; min-width: 220px; flex: 1 1 220px; max-width: 340px; }
+.toolbar-right { display: flex; gap: 10px; }
+.table-section { padding: 18px 20px 14px !important; overflow: hidden; }
+.table-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.table-container { overflow-x: auto; }
+.pagination { padding-top: 14px; }
+@media (max-width: 900px) {
+  .main-content { padding: 18px 14px 100px; }
+  .toolbar-left .search-box, .toolbar-left .filter-select, .toolbar-left select { max-width: none; flex: 1 1 100%; }
+}
+.toolbar-right button, .toolbar-right .secondary-button, .toolbar-right .primary-button { width: auto !important; }
+.search-box input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="range"]) { background: transparent !important; border: 0 !important; box-shadow: none !important; border-radius: 0 !important; }
+.admin-table th, .admin-table td { padding: 12px 10px !important; }
+.status { white-space: nowrap; }
+.admin-table td:nth-child(2) { min-width: 150px; }
+.admin-table thead, .admin-table thead tr { background: color-mix(in srgb, var(--elev) 75%, transparent) !important; }
+h1, h2, h3, h4, h5, p, span, a, td, th, label, small, strong, div, li, summary { font-family: inherit !important; }
+.hidden { display: none !important; }
