@@ -1,649 +1,145 @@
 <!DOCTYPE html>
 <html lang="fr">
-
 <head>
-
 <meta charset="UTF-8">
-
 <meta
 name="viewport"
 content="width=device-width,initial-scale=1.0">
-
 <meta
 http-equiv="X-UA-Compatible"
 content="IE=edge">
-
 <meta
 name="description"
-content="Gestion des mangas - Nexa Admin">
-
+content="Gestion des mangas - Manga Gallery FR">
 <meta
 name="theme-color"
 content="#7C5CFF">
-
 <title>
-
-Gestion des Mangas • Nexa Manga
-
+Gestion des Mangas • Manga Gallery FR
 </title>
-
 <link
 rel="icon"
 type="image/png"
 href="assets/logo.png">
-
 <link
 rel="preconnect"
 href="https://fonts.googleapis.com">
-
 <link
 rel="preconnect"
 href="https://fonts.gstatic.com"
 crossorigin>
-
 <link
 href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"
 rel="stylesheet">
-
 <link
 rel="stylesheet"
 href="css/dashboard.css">
-
 <link
 rel="stylesheet"
 href="css/mangas.css">
-
-
-
-
-
-
-
-
-
-
-
-
-
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://telegram.org; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com data:; img-src 'self' data: https: http:; connect-src 'self' https:; object-src 'none'; base-uri 'self'; form-action 'self'">
 <script src="../js/config.js"></script>
 <script src="js/safe-html.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js" defer></script>
 </head>
-
 <body>
-
 <div class="dashboard">
-
 <aside class="sidebar"></aside>
-
 <main class="main-content">
 
 <header class="topbar">
-
-<div class="page-title">
-
-<h1>
-
-Gestion des Mangas
-
-</h1>
-
-<p>
-
-Ajouter, modifier et supprimer les mangas
-
-</p>
-
-</div>
-
-<button
-id="add-manga"
-class="primary-button"
-type="button">
-
-<i data-lucide="plus"></i>
-
-<span>
-
-Ajouter un manga
-
-</span>
-
-</button>
-
+  <div class="page-title">
+    <h1>Gestion des Mangas</h1>
+    <p>Publie dans la Galerie ou dans La Sainte Culture (18+)</p>
+  </div>
+  <button id="add-manga" class="primary-button" type="button"><i data-lucide="plus"></i><span>Publier un titre</span></button>
 </header>
 
 <section class="toolbar">
-
-<div class="toolbar-left">
-
-<div class="search-box">
-
-<i data-lucide="search"></i>
-
-<input
-type="search"
-id="search-manga"
-placeholder="Rechercher un manga..."
-autocomplete="off">
-
-</div>
-
-<select
-id="category-filter"
-class="filter-select">
-
-<option value="">
-
-Toutes les catégories
-
-</option>
-
-</select>
-
-<select
-id="status-filter"
-class="filter-select">
-
-<option value="">
-
-Tous les statuts
-
-</option>
-
-<option value="ongoing">
-
-En cours
-
-</option>
-
-<option value="completed">
-
-Terminé
-
-</option>
-
-<option value="paused">
-
-En pause
-
-</option>
-
-</select>
-
-</div>
-
-<div class="toolbar-right">
-
-<button
-id="refresh-mangas"
-class="secondary-button"
-type="button">
-
-<i data-lucide="refresh-cw"></i>
-
-<span>
-
-Actualiser
-
-</span>
-
-</button>
-
-</div>
-
+  <div class="toolbar-left">
+    <div class="section-tabs" id="section-tabs" role="tablist">
+      <button type="button" class="tab active" data-section="normal">Galerie</button>
+      <button type="button" class="tab adult" data-section="sainte_culture">La Sainte Culture · 18+</button>
+    </div>
+    <div class="search-box"><i data-lucide="search"></i><input type="search" id="search-manga" placeholder="Rechercher un titre..." autocomplete="off"></div>
+    <select id="type-filter" class="filter-select"></select>
+    <select id="category-filter" class="filter-select"><option value="">Toutes les catégories</option></select>
+    <select id="status-filter" class="filter-select">
+      <option value="">Tous les statuts</option><option value="ongoing">En cours</option><option value="completed">Terminé</option><option value="paused">En pause</option>
+    </select>
+  </div>
+  <div class="toolbar-right">
+    <button id="refresh-mangas" class="secondary-button" type="button"><i data-lucide="refresh-cw"></i><span>Actualiser</span></button>
+  </div>
 </section>
-
-<!--==================================
-TABLE SECTION
-===================================-->
 
 <section class="table-section">
-
-<div class="table-header">
-
-<h2>
-
-Liste des Mangas
-
-</h2>
-
-<div class="table-actions">
-
-<span id="manga-count">
-
-0 mangas
-
-</span>
-
-</div>
-
-</div>
-
-<div class="table-container">
-
-<table class="admin-table">
-
-<thead>
-
-<tr>
-
-<th>
-
-Couverture
-
-</th>
-
-<th>
-
-Titre
-
-</th>
-
-<th>
-
-Catégorie
-
-</th>
-
-<th>
-
-Statut
-
-</th>
-
-<th>
-
-Chapitres
-
-</th>
-
-<th>
-
-Vues
-
-</th>
-
-<th>
-
-Note
-
-</th>
-
-<th>
-
-Créé le
-
-</th>
-
-<th>
-
-Actions
-
-</th>
-
-</tr>
-
-</thead>
-
-<tbody id="mangas-table-body">
-
-<tr>
-
-<td colspan="9" class="loading-row">
-
-Chargement des mangas...
-
-</td>
-
-</tr>
-
-</tbody>
-
-</table>
-
-</div>
-
-<div class="pagination">
-
-<button
-type="button"
-id="previous-page"
-class="secondary-button">
-
-<i data-lucide="chevron-left"></i>
-
-<span>
-
-Précédent
-
-</span>
-
-</button>
-
-<div class="pagination-info">
-
-<span id="pagination-info">
-
-Page 1 sur 1
-
-</span>
-
-</div>
-
-<button
-type="button"
-id="next-page"
-class="secondary-button">
-
-<span>
-
-Suivant
-
-</span>
-
-<i data-lucide="chevron-right"></i>
-
-</button>
-
-</div>
-
+  <div class="table-header">
+    <h2 id="list-title">Galerie</h2>
+    <div class="table-actions"><span id="manga-count">0 titre</span></div>
+  </div>
+  <div class="table-container">
+    <table class="admin-table">
+      <thead><tr><th>Couverture</th><th>Titre</th><th>Type</th><th>Catégorie</th><th>Statut</th><th>Chapitres</th><th>Visibilité</th><th>Créé le</th><th>Actions</th></tr></thead>
+      <tbody id="mangas-table-body"><tr><td colspan="9" class="loading-row">Chargement...</td></tr></tbody>
+    </table>
+  </div>
+  <div class="pagination">
+    <button type="button" id="previous-page" class="secondary-button"><i data-lucide="chevron-left"></i><span>Précédent</span></button>
+    <div class="pagination-info"><span id="pagination-info">Page 1 sur 1</span></div>
+    <button type="button" id="next-page" class="secondary-button"><span>Suivant</span><i data-lucide="chevron-right"></i></button>
+  </div>
 </section>
 
-<!--==================================
-ADD / EDIT MANGA MODAL
-===================================-->
-
-<div
-id="manga-modal"
-class="modal hidden">
-
-<div
-class="modal-content">
-
-<div
-class="modal-header">
-
-<h2 id="modal-title">
-
-Ajouter un manga
-
-</h2>
-
-<button
-type="button"
-id="close-modal"
-class="icon-button">
-
-<i data-lucide="x"></i>
-
-</button>
-
-</div>
-
-<form id="manga-form">
-
-<input
-type="hidden"
-id="manga-id">
-
-<div class="form-grid">
-
-<div class="form-group">
-
-<label for="manga-title">
-
-Titre
-
-</label>
-
-<input
-type="text"
-id="manga-title"
-required>
-
-</div>
-
-<div class="form-group">
-
-<label for="manga-slug">
-
-Slug
-
-</label>
-
-<input
-type="text"
-id="manga-slug"
-readonly>
-
-</div>
-
-</div>
-
-<div class="form-grid">
-
-<div class="form-group">
-
-<label for="manga-author">
-
-Auteur
-
-</label>
-
-<input
-type="text"
-id="manga-author"
-placeholder="Nom de l'auteur">
-
-</div>
-
-<div class="form-group">
-
-<label for="manga-category">
-
-Catégorie
-
-</label>
-
-<select
-id="manga-category"
-required>
-
-<option value="">
-
-Sélectionner une catégorie
-
-</option>
-
-</select>
-
-</div>
-
-</div>
-
-<div class="form-group">
-
-<label for="manga-description">
-
-Description
-
-</label>
-
-<textarea
-id="manga-description"
-rows="6"
-placeholder="Description du manga...">
-
-</textarea>
-
-</div>
-
-<div class="form-grid">
-
-<div class="form-group">
-
-<label for="manga-status">
-
-Statut
-
-</label>
-
-<select
-id="manga-status">
-
-<option value="ongoing">
-
-En cours
-
-</option>
-
-<option value="completed">
-
-Terminé
-
-</option>
-
-<option value="paused">
-
-En pause
-
-</option>
-
-</select>
-
-</div>
-
-<div class="form-group">
-
-<label for="manga-language">
-
-Langue
-
-</label>
-
-<select
-id="manga-language">
-
-<option value="fr">
-
-Français
-
-</option>
-
-<option value="en">
-
-Anglais
-
-</option>
-
-<option value="jp">
-
-Japonais
-
-</option>
-
-</select>
-
-</div>
-
-</div>
-
-<div class="form-grid">
-
-<div class="form-group">
-
-<label for="manga-cover">
-
-Couverture
-
-</label>
-
-<input
-type="file"
-id="manga-cover"
-accept="image/*">
-
-</div>
-
-<div class="form-group">
-
-<label>
-
-Aperçu
-
-</label>
-
-<div class="cover-preview">
-
-<img
-id="cover-preview"
-src="assets/default-cover.png"
-alt="Couverture">
-
-</div>
-
-</div>
-
-</div>
-
-<div class="modal-actions">
-
-<button
-type="button"
-id="cancel-button"
-class="secondary-button">
-
-Annuler
-
-</button>
-
-<button
-type="submit"
-id="save-button"
-class="primary-button">
-
-<i data-lucide="save"></i>
-
-<span>
-
-Enregistrer
-
-</span>
-
-</button>
-
-</div>
-
-</form>
-
-</div>
-
+<div id="manga-modal" class="modal hidden">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 id="modal-title">Publier un titre</h2>
+      <button type="button" id="close-modal" class="icon-button"><i data-lucide="x"></i></button>
+    </div>
+    <form id="manga-form">
+      <input type="hidden" id="manga-id">
+      <div class="form-grid">
+        <div class="form-group"><label for="manga-section">Où publier ?</label>
+          <select id="manga-section">
+            <option value="normal">Galerie (manga, webtoon, bande dessinée)</option>
+            <option value="sainte_culture">La Sainte Culture · 18+ (webtoon, bande dessinée)</option>
+          </select></div>
+        <div class="form-group"><label for="manga-type">Type</label><select id="manga-type"></select></div>
+      </div>
+      <div class="form-grid">
+        <div class="form-group"><label for="manga-title">Titre</label><input type="text" id="manga-title" maxlength="255" required></div>
+        <div class="form-group"><label for="manga-slug">Slug (automatique)</label><input type="text" id="manga-slug" placeholder="généré à partir du titre"></div>
+      </div>
+      <div class="form-grid">
+        <div class="form-group"><label for="manga-category">Catégorie</label>
+          <select id="manga-category"><option value="">Aucune catégorie</option></select></div>
+        <div class="form-group"><label for="manga-status">Statut</label>
+          <select id="manga-status"><option value="ongoing">En cours</option><option value="completed">Terminé</option><option value="paused">En pause</option></select></div>
+      </div>
+      <div class="form-group"><label for="manga-description">Description</label>
+        <textarea id="manga-description" rows="5" maxlength="5000" placeholder="Résumé du titre..."></textarea></div>
+      <div class="form-grid">
+        <div class="form-group"><label for="manga-cover">Couverture (lien https de l'image)</label>
+          <input type="url" id="manga-cover" placeholder="https://..."></div>
+        <div class="form-group"><label for="manga-banner">Bannière (lien https, facultatif)</label>
+          <input type="url" id="manga-banner" placeholder="https://..."></div>
+      </div>
+      <div class="form-grid">
+        <div class="form-group"><label for="manga-visibility">Visibilité</label>
+          <select id="manga-visibility"><option value="public">Public (visible dans l'application)</option><option value="hidden">Masqué (brouillon)</option></select></div>
+        <div class="form-group"><label>Aperçu</label><div class="cover-preview"><img id="cover-preview" src="assets/default-cover.png" alt="Couverture"></div></div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" id="cancel-button" class="secondary-button">Annuler</button>
+        <button type="submit" id="save-button" class="primary-button"><i data-lucide="save"></i><span>Enregistrer</span></button>
+      </div>
+    </form>
+  </div>
 </div>
 
 </main>
-
 </div>
-
-<!--==========================
-SCRIPTS
-===========================-->
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 <script src="js/helpers.js"></script>
 <script src="js/toast.js"></script>
 <script src="js/api.js"></script>
@@ -652,5 +148,4 @@ SCRIPTS
 <script src="js/mangas.js"></script>
 <script src="js/page-boot.js"></script>
 </body>
-
 </html>

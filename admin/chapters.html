@@ -1,545 +1,117 @@
 <!DOCTYPE html>
 <html lang="fr">
-
 <head>
-
 <meta charset="UTF-8">
-
 <meta
 name="viewport"
 content="width=device-width,initial-scale=1.0">
-
 <meta
 http-equiv="X-UA-Compatible"
 content="IE=edge">
-
 <meta
 name="description"
 content="Gestion des chapitres - Nexa Admin">
-
 <meta
 name="theme-color"
 content="#7C5CFF">
-
 <title>
-
-Gestion des Chapitres • Nexa Manga
-
+Gestion des Chapitres • Manga Gallery FR
 </title>
-
 <link
 rel="icon"
 type="image/png"
 href="assets/logo.png">
-
 <link
 rel="preconnect"
 href="https://fonts.googleapis.com">
-
 <link
 rel="preconnect"
 href="https://fonts.gstatic.com"
 crossorigin>
-
 <link
 href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"
 rel="stylesheet">
-
 <link
 rel="stylesheet"
 href="css/dashboard.css">
-
 <link
 rel="stylesheet"
 href="css/chapters.css">
-
-
-
-
-
-
-
-
-
-
-
-
-
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://telegram.org; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com data:; img-src 'self' data: https: http:; connect-src 'self' https:; object-src 'none'; base-uri 'self'; form-action 'self'">
 <script src="../js/config.js"></script>
 <script src="js/safe-html.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js" defer></script>
 </head>
-
 <body>
-
 <div class="dashboard">
-
 <aside class="sidebar"></aside>
-
 <main class="main-content">
 
 <header class="topbar">
-
-<div class="page-title">
-
-<h1>
-
-Gestion des Chapitres
-
-</h1>
-
-<p>
-
-Ajouter, modifier et gérer les chapitres des mangas
-
-</p>
-
-</div>
-
-<button
-type="button"
-id="add-chapter"
-class="primary-button">
-
-<i data-lucide="plus"></i>
-
-<span>
-
-Ajouter un chapitre
-
-</span>
-
-</button>
-
+  <div class="page-title"><h1>Gestion des Chapitres</h1><p>Ajouter les pages (liens d'images) de chaque chapitre</p></div>
+  <button id="add-chapter" class="primary-button" type="button"><i data-lucide="plus"></i><span>Ajouter un chapitre</span></button>
 </header>
 
 <section class="toolbar">
-
-<div class="toolbar-left">
-
-<div class="search-box">
-
-<i data-lucide="search"></i>
-
-<input
-type="search"
-id="search-chapter"
-placeholder="Rechercher un chapitre..."
-autocomplete="off">
-
-</div>
-
-<select
-id="manga-filter"
-class="filter-select">
-
-<option value="">
-
-Tous les mangas
-
-</option>
-
-</select>
-
-<select
-id="status-filter"
-class="filter-select">
-
-<option value="">
-
-Tous les statuts
-
-</option>
-
-<option value="draft">
-
-Brouillon
-
-</option>
-
-<option value="published">
-
-Publié
-
-</option>
-
-</select>
-
-</div>
-
-<div class="toolbar-right">
-
-<button
-type="button"
-id="refresh-chapters"
-class="secondary-button">
-
-<i data-lucide="refresh-cw"></i>
-
-<span>
-
-Actualiser
-
-</span>
-
-</button>
-
-</div>
-
+  <div class="toolbar-left">
+    <div class="search-box"><i data-lucide="search"></i><input type="search" id="search-chapter" placeholder="Rechercher un chapitre..." autocomplete="off"></div>
+    <select id="manga-filter" class="filter-select"><option value="">Tous les titres</option></select>
+    <select id="status-filter" class="filter-select"><option value="">Tous les statuts</option><option value="draft">Brouillon</option><option value="published">Publié</option></select>
+  </div>
+  <div class="toolbar-right">
+    <button type="button" id="refresh-chapters" class="secondary-button"><i data-lucide="refresh-cw"></i><span>Actualiser</span></button>
+  </div>
 </section>
 
 <section class="table-section">
-
-<div class="table-header">
-
-<h2>
-
-Liste des Chapitres
-
-</h2>
-
-<div class="table-actions">
-
-<span id="chapter-count">
-
-0 chapitres
-
-</span>
-
-</div>
-
-</div>
-
-<div class="table-container">
-
-<table class="admin-table">
-
-<thead>
-
-<tr>
-
-<th>Chapitre</th>
-
-<th>Manga</th>
-
-<th>Pages</th>
-
-<th>Date</th>
-
-<th>Statut</th>
-
-<th>Actions</th>
-
-</tr>
-
-</thead>
-
-<tbody id="chapters-table-body">
-
-<tr>
-
-<td
-colspan="6"
-class="loading-row">
-
-Chargement des chapitres...
-
-</td>
-
-</tr>
-
-</tbody>
-
-</table>
-
-</div>
-
-<div class="pagination">
-
-<button
-type="button"
-id="previous-page"
-class="secondary-button">
-
-<i data-lucide="chevron-left"></i>
-
-<span>
-
-Précédent
-
-</span>
-
-</button>
-
-<div class="pagination-info">
-
-<span id="pagination-info">
-
-Page 1 sur 1
-
-</span>
-
-</div>
-
-<button
-type="button"
-id="next-page"
-class="secondary-button">
-
-<span>
-
-Suivant
-
-</span>
-
-<i data-lucide="chevron-right"></i>
-
-</button>
-
-</div>
-
+  <div class="table-header"><h2>Liste des Chapitres</h2><div class="table-actions"><span id="chapter-count">0 chapitre</span></div></div>
+  <div class="table-container">
+    <table class="admin-table">
+      <thead><tr><th>Chapitre</th><th>Titre</th><th>Espace</th><th>Pages</th><th>Date</th><th>Statut</th><th>Actions</th></tr></thead>
+      <tbody id="chapters-table-body"><tr><td colspan="7" class="loading-row">Chargement des chapitres...</td></tr></tbody>
+    </table>
+  </div>
+  <div class="pagination">
+    <button type="button" id="previous-page" class="secondary-button"><i data-lucide="chevron-left"></i><span>Précédent</span></button>
+    <div class="pagination-info"><span id="pagination-info">Page 1 sur 1</span></div>
+    <button type="button" id="next-page" class="secondary-button"><span>Suivant</span><i data-lucide="chevron-right"></i></button>
+  </div>
 </section>
 
-<!--==================================
-MODAL
-===================================-->
-
-<div
-id="chapter-modal"
-class="modal hidden">
-
-<div
-class="modal-content">
-
-<div
-class="modal-header">
-
-<h2 id="chapter-modal-title">
-
-Ajouter un chapitre
-
-</h2>
-
-<button
-type="button"
-id="close-chapter-modal"
-class="icon-button">
-
-<i data-lucide="x"></i>
-
-</button>
-
-</div>
-
-<form
-id="chapter-form">
-
-<input
-type="hidden"
-id="chapter-id">
-
-<div class="form-grid">
-
-<div class="form-group">
-
-<label for="chapter-manga">
-
-Manga
-
-</label>
-
-<select
-id="chapter-manga"
-required>
-
-<option value="">
-
-Sélectionner un manga
-
-</option>
-
-</select>
-
-</div>
-
-<div class="form-group">
-
-<label for="chapter-number">
-
-Numéro
-
-</label>
-
-<input
-type="number"
-id="chapter-number"
-min="1"
-required>
-
-</div>
-
-</div>
-
-<div class="form-group">
-
-<label for="chapter-title">
-
-Titre du chapitre
-
-</label>
-
-<input
-type="text"
-id="chapter-title">
-
-</div>
-
-<div class="form-grid">
-
-<div class="form-group">
-
-<label for="chapter-status">
-
-Statut
-
-</label>
-
-<select
-id="chapter-status">
-
-<option value="draft">
-
-Brouillon
-
-</option>
-
-<option value="published">
-
-Publié
-
-</option>
-
-</select>
-
-</div>
-
-<div class="form-group">
-
-<label for="chapter-date">
-
-Date de publication
-
-</label>
-
-<input
-type="date"
-id="chapter-date">
-
-</div>
-
-</div>
-
-<div class="form-group">
-
-<label for="chapter-pages">
-
-Pages du chapitre
-
-</label>
-
-<input
-type="file"
-id="chapter-pages"
-accept="image/*"
-multiple>
-
-</div>
-
-<section
-id="chapter-preview"
-class="preview-section">
-
-<h3>
-
-Aperçu des pages
-
-</h3>
-
-<div
-id="preview-grid"
-class="preview-grid">
-
-</div>
-
-</section>
-
-<div class="form-group">
-
-<label for="chapter-notes">
-
-Notes
-
-</label>
-
-<textarea
-id="chapter-notes"
-rows="5">
-
-</textarea>
-
-</div>
-
-<div class="modal-actions">
-
-<button
-type="button"
-id="cancel-chapter-button"
-class="secondary-button">
-
-Annuler
-
-</button>
-
-<button
-type="submit"
-id="save-chapter-button"
-class="primary-button">
-
-<i data-lucide="save"></i>
-
-<span>
-
-Enregistrer
-
-</span>
-
-</button>
-
-</div>
-
-</form>
-
-</div>
-
+<div id="chapter-modal" class="modal hidden">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 id="chapter-modal-title">Ajouter un chapitre</h2>
+      <button type="button" id="close-chapter-modal" class="icon-button"><i data-lucide="x"></i></button>
+    </div>
+    <form id="chapter-form">
+      <input type="hidden" id="chapter-id">
+      <div class="form-grid">
+        <div class="form-group"><label for="chapter-manga">Titre (manga / webtoon / BD)</label>
+          <select id="chapter-manga" required><option value="">Sélectionner un titre</option></select></div>
+        <div class="form-group"><label for="chapter-number">Numéro</label><input type="number" id="chapter-number" min="0" step="0.5" required></div>
+      </div>
+      <div class="form-group"><label for="chapter-title">Titre du chapitre (facultatif)</label><input type="text" id="chapter-title" maxlength="255"></div>
+      <div class="form-grid">
+        <div class="form-group"><label for="chapter-status">Statut</label>
+          <select id="chapter-status"><option value="published">Publié</option><option value="draft">Brouillon</option></select></div>
+        <div class="form-group"><label for="chapter-visibility">Visibilité</label>
+          <select id="chapter-visibility"><option value="public">Public</option><option value="hidden">Masqué</option></select></div>
+      </div>
+      <div class="form-group"><label for="chapter-pages">Pages : un lien https d'image par ligne, dans l'ordre de lecture</label>
+        <textarea id="chapter-pages" rows="8" placeholder="https://.../page-01.jpg&#10;https://.../page-02.jpg"></textarea>
+        <small id="pages-count" style="opacity:.7">0 page</small></div>
+      <section id="chapter-preview" class="preview-section"><h3>Aperçu des pages</h3><div id="preview-grid" class="preview-grid"></div></section>
+      <div class="modal-actions">
+        <button type="button" id="cancel-chapter-button" class="secondary-button">Annuler</button>
+        <button type="submit" id="save-chapter-button" class="primary-button"><i data-lucide="save"></i><span>Enregistrer</span></button>
+      </div>
+    </form>
+  </div>
 </div>
 
 </main>
-
 </div>
-
-
-
-
-
-
-
-
-
-
-
-
-
 <script src="js/helpers.js"></script>
 <script src="js/toast.js"></script>
 <script src="js/api.js"></script>
@@ -548,5 +120,4 @@ Enregistrer
 <script src="js/chapters.js"></script>
 <script src="js/page-boot.js"></script>
 </body>
-
 </html>
