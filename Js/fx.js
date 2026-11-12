@@ -1,4 +1,4 @@
-/* Nexa Manga - micro-interactions: ripple, 3D tilt, particle bursts, confetti, counters, scroll reveal, pull-to-refresh. */
+/* Manga Gallery FR - micro-interactions: ripple, 3D tilt, particle bursts, confetti, counters, scroll reveal, pull-to-refresh. */
 (function () {
   "use strict";
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;

@@ -1,7 +1,9 @@
-/* Nexa Manga - inline SVG icons (no external icon library, nothing to load). */
+/* Manga Gallery FR - inline SVG icons (no external icon library, nothing to load). */
 (function () {
   "use strict";
   const P = {
+    flame: '<path d="M12 3c.6 3-1.4 4.6-3 6.5C7.5 11.2 6.5 13 6.5 15a5.5 5.5 0 0 0 11 0c0-2.4-1.2-3.8-2.3-5.1-.4 1.1-1 1.7-1.9 1.9C13.6 9 13.4 5.6 12 3z"/>',
+    lock: '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
     home: '<path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/>',
     search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
     library: '<path d="M4 5a2 2 0 0 1 2-2h3v18H6a2 2 0 0 1-2-2z"/><path d="M9 3h5v18H9z"/><path d="m16 5 4 1-3.5 15-4-1z"/>',

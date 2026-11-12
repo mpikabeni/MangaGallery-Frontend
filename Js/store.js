@@ -1,4 +1,4 @@
-/* Nexa Manga - library store. The BACKEND is the source of truth (favorites, reading progress, preferences);
+/* Manga Gallery FR - library store. The BACKEND is the source of truth (favorites, reading progress, preferences);
  * a per-user local cache only makes the first paint instant and covers short network failures. */
 (function () {
   "use strict";

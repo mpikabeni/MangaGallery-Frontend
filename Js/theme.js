@@ -1,4 +1,4 @@
-/* Nexa Manga - themes. "auto" follows the Telegram light/dark scheme. Switching animates as a circular reveal. */
+/* Manga Gallery FR - themes. "auto" follows the Telegram light/dark scheme. Switching animates as a circular reveal. */
 (function () {
   "use strict";
   const KEY = "nexa:theme";

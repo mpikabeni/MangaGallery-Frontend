@@ -1,4 +1,4 @@
-/* Nexa Manga - shell: boot, channel gate, hash router, persistent floating nav, pull-to-refresh. */
+/* Manga Gallery FR - shell: boot, channel gate, hash router, persistent floating nav, pull-to-refresh. */
 (function () {
   "use strict";
   const { h, icon, T, tg, haptic, toast, openLink, empty } = UI;
@@ -31,7 +31,7 @@
     const bell = () => h("a", { class: "icon-btn" + (state.unread > 0 ? " ring" : ""), href: "#/notifications", "aria-label": T("notif_title") }, icon("bell"), state.unread > 0 ? h("span", { class: "dot" }) : null);
     const top = h("header", { class: "topbar" },
       back ? h("button", { class: "icon-btn", type: "button", "aria-label": T("reader_back"), onclick: goBack }, icon("back")) : null,
-      brand ? h("div", { class: "brand" }, h("img", { src: "assets/logo-original-192.png", alt: "" }), h("div", {}, h("b", { text: "Nexa Manga" }), h("small", { text: T("made_by") })))
+      brand ? h("div", { class: "brand" }, h("img", { src: "assets/logo-original-192.png", alt: "" }), h("div", {}, h("b", { text: "Manga Gallery FR" }), h("small", { text: T("made_by") })))
             : h("h1", { text: title }),
       right === "bell" ? bell() : right || null);
     return [top, h("main", {}, body)];
@@ -84,6 +84,9 @@
       case "REGISTRATION_CLOSED": return screen({ title: T("closed_title"), body: T("closed_body") });
       case "ACCOUNT_DISABLED": return screen({ title: T("disabled_title"), body: T("disabled_body") });
       case "INVALID_INIT_DATA": return screen({ title: T("tg_only_title"), body: T("tg_only_body") });
+      case "CHANNEL_CHECK_FAILED": return screen({ title: T("check_title"), body: T("check_body"), buttons: [retry] });
+      case "RATE_LIMITED": return screen({ title: T("rate_title"), body: T("rate_body"), buttons: [retry] });
+      case "NETWORK": return screen({ title: T("net_title"), body: T("net_body"), buttons: [retry] });
       default: return screen({ title: T("error_title"), body: T("error_body"), buttons: [retry] });
     }
   }
@@ -96,9 +99,9 @@
     const [path, qs] = raw.split("?");
     return { path, q: new URLSearchParams(qs || "") };
   }
-  const ROOTS = new Set(["/", "/browse", "/library", "/library/favorites", "/library/history", "/settings"]);
+  const ROOTS = new Set(["/", "/browse", "/sainte-culture", "/library", "/library/favorites", "/library/history", "/settings"]);
   const routes = [
-    [/^\/?$/, (c) => Nexa.views.home(c)], [/^\/browse$/, (c) => Nexa.views.browse(c)], [/^\/manga\/(\d+)$/, (c) => Nexa.views.mangaPage(c)],
+    [/^\/?$/, (c) => Nexa.views.home(c)], [/^\/browse$/, (c) => Nexa.views.browse(c)], [/^\/sainte-culture$/, (c) => Nexa.views.sainteCulture(c)], [/^\/manga\/(\d+)$/, (c) => Nexa.views.mangaPage(c)],
     [/^\/read\/(\d+)$/, (c) => Nexa.reader(c)], [/^\/library(?:\/(favorites|history))?$/, (c) => Nexa.views.library(c)],
     [/^\/notifications$/, (c) => Nexa.views.notifications(c)], [/^\/settings$/, (c) => Nexa.views.settings(c)],
   ];
@@ -119,6 +122,7 @@
       catch (e) {
         if (!ctx.ok()) return;
         if (AUTH_CODES.includes(e.code)) return authError(e);
+        if (e.code === "ADULT_REQUIRED") return Nexa.views.adultGate();
         const notFound = e.status === 404;
         render(page({ title: T("sorry"), back: !ROOTS.has(path), body: empty("info", notFound ? T("not_found") : T("error_title"), notFound ? "" : T("error_body"),
           h("button", { class: "btn btn-primary", type: "button", onclick: navigate }, icon("refresh"), T("retry"))) }), { tab: ROOTS.has(path) ? (path.split("/")[1] || "home") : null });
@@ -162,7 +166,7 @@
       box.replaceChildren(
         bot ? h("button", { class: "btn btn-primary", type: "button", onclick: () => openLink(`https://t.me/${bot}`) }, icon("send"), T("open_in_telegram")) : null,
         h("button", { class: "btn" + (bot ? "" : " btn-primary"), type: "button", onclick: () => openLink(cfg.channelUrl) }, icon("send"), T("join_channel", { channel: cfg.channel })),
-        Nexa.demoAvailable ? h("button", { class: "btn", type: "button", onclick: () => Nexa.startDemo() }, icon("sparkles"), T("preview_design")) : null);
+        null);
     };
     $root.replaceChildren(h("div", { class: "screen" },
       h("img", { class: "logo", src: "assets/logo-original.png", alt: "Manga Gallery" }),
@@ -176,12 +180,7 @@
   }
 
   /* ------------------------------------------------------------------ boot */
-  function demoUi() {
-    if (!Nexa.demo) return;
-    document.body.append(h("div", { class: "demo-badge", text: T("demo_badge") }));
-  }
   async function afterAuth() {
-    demoUi();
     try { await Store.load(state.user); } catch (_) { /* the app still works from the cache */ }
     I18n.onChange = (p) => Store.savePrefs({ language: p });
     Theme.onChange = (p) => Store.savePrefs({ theme: p });

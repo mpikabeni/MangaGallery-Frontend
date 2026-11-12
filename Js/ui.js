@@ -1,4 +1,4 @@
-/* Nexa Manga - shared UI helpers. Everything is built with DOM calls / textContent (never innerHTML with data). */
+/* Manga Gallery FR - shared UI helpers. Everything is built with DOM calls / textContent (never innerHTML with data). */
 (function () {
   "use strict";
   const cfg = window.NEXA_CONFIG;
@@ -25,7 +25,6 @@
 
   function safeImg(u) {
     if (typeof u !== "string" || !u) return null;
-    if (window.Nexa && Nexa.demo && /^data:image\/svg\+xml;utf8,/.test(u)) return u;   // demo sample art only
     if (u.startsWith("/") && !u.startsWith("//")) return API_ORIGIN + u;
     return /^https?:\/\/[^\s"'<>]+$/i.test(u) ? u : null;
   }
@@ -98,7 +97,7 @@
   function mangaCard(m, opts = {}) {
     const sub = opts.sub !== undefined ? opts.sub : (m.chapters_count ? `${m.chapters_count} ${T("chapters").toLowerCase()}` : "");
     const a = h("a", { class: "mcard reveal", href: `#/manga/${m.id}` },
-      h("div", { class: "tilt" }, cover(m, opts.badge)),
+      h("div", { class: "tilt" }, cover(m, opts.badge || (m.section === "sainte_culture" ? T("adult_badge") : null))),
       h("div", { class: "t", text: m.title }),
       sub ? h("div", { class: "s", text: sub }) : null,
       opts.progress != null ? h("div", { class: "progress" }, h("i", { style: `width:${Math.max(4, Math.min(100, opts.progress))}%` })) : null);

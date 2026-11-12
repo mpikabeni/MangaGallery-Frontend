@@ -1,4 +1,4 @@
-/* Nexa Manga - reader. Two modes: vertical scroll (webtoon) and page-by-page with swipe, tap zones and double-tap zoom.
+/* Manga Gallery FR - reader. Two modes: vertical scroll (webtoon) and page-by-page with swipe, tap zones and double-tap zoom.
  * The reading position is saved on the backend, so reading resumes on any device. */
 (function () {
   "use strict";

@@ -1,4 +1,4 @@
-/* Nexa Manga - API client.
+/* Manga Gallery FR - API client.
  * Authentication = Telegram initData sent to the backend, which verifies its signature.
  * Handles Render's cold start: timeouts, automatic retries with back-off and a "server is waking up" signal. */
 (function () {

@@ -1,4 +1,4 @@
-/* Nexa Manga - views: home, browse, manga, library, notifications, settings. Data always comes from the backend. */
+/* Manga Gallery FR - views: home, browse, manga, library, notifications, settings. Data always comes from the backend. */
 (function () {
   "use strict";
   const { h, icon, T, safeImg, haptic, toast, askConfirm, openLink, timeAgo, isRecent, num, gradient, statusTag, throttle, lazyImg,
@@ -61,7 +61,7 @@
     FX.burst(x, y, { count: 22, colors: ["#7c5cff", "#22d3ee", "#ffd166", "#ff5d8f"] });
     haptic("medium");
     try {
-      if (Date.now() - randomPool.at > 300000) randomPool = { at: Date.now(), items: (await Api.get("/mangas", { per_page: 100, sort: "latest" })).items || [] };
+      if (Date.now() - randomPool.at > 300000) randomPool = { at: Date.now(), items: (await Api.get("/mangas", { per_page: 100, sort: "latest", section: "normal" })).items || [] };
       if (!randomPool.items.length) return toast(T("home_empty_title"));
       const m = randomPool.items[Math.floor(Math.random() * randomPool.items.length)];
       setTimeout(() => sh().go(`#/manga/${m.id}`), 260);
@@ -74,7 +74,7 @@
       const hs = h("div", { class: "skel" }); hs.style.height = "232px";
       S.render(S.page({ brand: true, right: "bell", body: [hs, ...skel(2, 84)] }), { tab: "home" });
     }
-    const R = await Promise.allSettled([Api.get("/mangas", { per_page: 12, sort: "latest" }), Api.get("/chapters/latest", { per_page: 10 }),
+    const R = await Promise.allSettled([Api.get("/mangas", { per_page: 12, sort: "latest", section: "normal" }), Api.get("/chapters/latest", { per_page: 10, section: "normal" }),
       Api.get("/categories"), Api.get("/notifications/me/unread-count")]);
     if (!ctx.ok()) return;
     if (R[0].status === "rejected" && R[1].status === "rejected") throw R[0].reason;
@@ -91,12 +91,13 @@
     if (items.length) body.push(heroCarousel(items.slice(0, 5)));
     else body.push(empty("book", T("home_empty_title"), T("home_empty_body")));
 
+    body.push(scBanner());
     body.push(h("div", { class: "tiles section reveal", style: "margin-top:6px" },
       qtile("shuffle", T("surprise"), "#7c5cff", "#22d3ee", surprise),
       qtile("heart", T("favorites"), "#ff5d8f", "#ff9d5c", () => S.go("#/library/favorites")),
       qtile("search", T("tile_browse"), "#34d399", "#22d3ee", () => S.go("#/browse"))));
 
-    const hist = Store.histList().slice(0, 10);
+    const hist = Store.histList().filter((e) => !(e.manga && e.manga.section === "sainte_culture")).slice(0, 10);
     if (hist.length) {
       body.push(h("section", { class: "section reveal" },
         h("div", { class: "section-head" }, h("h2", { text: T("home_continue") }), h("a", { class: "link", href: "#/library/history" }, T("see_all"), icon("chevron"))),
@@ -125,6 +126,27 @@
     }
     S.render(S.page({ brand: true, right: "bell", body }), { tab: "home", refresh: () => home({ ...ctx, silent: true }) });
   }
+  /* ---- La Sainte Culture (18+) */
+  const adultOk = () => { const u = sh().state.user || {}; return !!(u.adult_confirmed || u.is_admin); };
+  function scBanner() {
+    return h("a", { class: "sc-banner reveal", href: "#/sainte-culture" },
+      h("span", { class: "sc-ico" }, icon("flame")),
+      h("div", { class: "sc-txt" }, h("b", { text: T("sc_name") }), h("span", { text: T("sc_banner_body") })),
+      h("span", { class: "sc-18", text: T("adult_badge") }), icon("chevron"));
+  }
+  function adultGate() {
+    const S = sh();
+    const ok = h("button", { class: "btn btn-primary", type: "button", onclick: async (ev) => {
+      const b = ev.currentTarget; b.setAttribute("disabled", "");
+      try { const r = await Api.post("/auth/adult-confirm", { confirm: true }); S.state.user = r.user; haptic("success"); toast(T("adult_ok")); S.navigate(); }
+      catch (_) { b.removeAttribute("disabled"); haptic("error"); toast(T("adult_error")); }
+    } }, icon("check"), T("adult_confirm"));
+    const back = h("button", { class: "btn", type: "button", onclick: () => S.go("#/") }, icon("back"), T("adult_decline"));
+    S.render([h("div", { class: "screen adult-gate" },
+      h("div", { class: "adult-seal" }, icon("flame"), h("b", { text: T("adult_badge") })),
+      h("h1", { text: T("sc_name") }), h("p", { class: "sc-sub", text: T("adult_gate_title") }),
+      h("p", { text: T("adult_gate_body") }), h("div", { class: "btns" }, ok, back))], { hideNav: true });
+  }
   function qtile(ic, label, c1, c2, onClick) {
     const t = h("button", { class: "qtile", type: "button", onclick: onClick }, h("span", { class: "ico" }, icon(ic)), label);
     t.style.setProperty("--c1", c1); t.style.setProperty("--c2", c2);
@@ -132,17 +154,25 @@
   }
 
   /* ================================================================== BROWSE */
-  async function browse(ctx) {
-    const S = sh();
+  const browse = (ctx) => browseSection(ctx, "normal");
+  const sainteCulture = (ctx) => browseSection(ctx, "sainte_culture");
+  async function browseSection(ctx, section) {
+    const S = sh(), adult = section === "sainte_culture";
+    if (adult && !adultOk()) return adultGate();
+    const TYPES = adult ? ["webtoon", "comic"] : ["manga", "webtoon", "comic"];
+    let type = TYPES.includes(ctx.q.get("type")) ? ctx.q.get("type") : "";
     let q = ctx.q.get("q") || "", cat = ctx.q.get("cat") || "", sort = ctx.q.get("sort") || "latest", pageNo = 1, busy = false, token = 0;
     let mode = (() => { try { return localStorage.getItem("nexa:view") || "grid"; } catch (_) { return "grid"; } })();
     const cats = await Api.get("/categories");
     if (!ctx.ok()) return;
 
-    const input = h("input", { type: "search", placeholder: T("search_placeholder"), value: q, enterkeyhint: "search", autocomplete: "off", maxlength: "100", "aria-label": T("nav_browse") });
+    const input = h("input", { type: "search", placeholder: T(adult ? "sc_search" : "search_placeholder"), value: q, enterkeyhint: "search", autocomplete: "off", maxlength: "100", "aria-label": T("nav_browse") });
     const clear = h("button", { class: "clear", type: "button", "aria-label": T("close"), onclick: () => { input.value = ""; q = ""; box.classList.remove("has"); input.focus(); syncUrl(); load(true); } }, icon("x"));
     const box = h("div", { class: "search" + (q ? " has" : "") }, icon("search"), input, clear);
     const chips = h("div", { class: "chips" });
+    const typeChips = h("div", { class: "chips" });
+    const paintTypes = () => typeChips.replaceChildren(...[["", T("type_all")], ...TYPES.map((t) => [t, T("type_" + t)])].map(([id, label]) =>
+      h("button", { class: "chip" + (type === id ? " on" : ""), type: "button", text: label, onclick: () => { type = id; haptic("select"); paintTypes(); syncUrl(); load(true); } })));
     const sortSeg = segmented([["latest", T("sort_latest")], ["updated", T("sort_updated")], ["title", T("sort_title")]], sort, (id) => { sort = id; syncUrl(); load(true); });
     const results = h("div");
     const info = h("div");
@@ -157,8 +187,8 @@
     function pick(id) { cat = id; haptic("select"); paintChips(); syncUrl(); load(true); }
     function syncUrl() {
       const p = new URLSearchParams();
-      if (q) p.set("q", q); if (cat) p.set("cat", cat); if (sort !== "latest") p.set("sort", sort);
-      history.replaceState(null, "", "#/browse" + (p.toString() ? "?" + p : ""));
+      if (q) p.set("q", q); if (cat) p.set("cat", cat); if (type) p.set("type", type); if (sort !== "latest") p.set("sort", sort);
+      history.replaceState(null, "", (adult ? "#/sainte-culture" : "#/browse") + (p.toString() ? "?" + p : ""));
     }
     const row = (m) => h("a", { class: "item reveal", href: `#/manga/${m.id}` }, h("div", { class: "thumb" }, cover(m)),
       h("div", { class: "body" }, h("b", { text: m.title }), h("span", { text: [m.category && m.category.name, statusTag(m.status), `${m.chapters_count || 0} ${T("chapters").toLowerCase()}`].filter(Boolean).join(" · ") })), icon("chevron"));
@@ -169,16 +199,17 @@
       if (reset) { pageNo = 1; info.replaceChildren(); more.classList.add("hidden"); results.replaceChildren(...(mode === "grid" ? skel(6, 190) : skel(4, 82))); }
       more.setAttribute("disabled", "");
       try {
-        const r = await Api.get("/mangas", { q, category_id: cat, sort, page: pageNo, per_page: 18 });
+        const r = await Api.get("/mangas", { q, category_id: cat, type, section, sort, page: pageNo, per_page: 18 });
         if (my !== token || !ctx.ok()) return;
         if (reset) results.replaceChildren();
         const rows = (r.items || []).map((m, i) => (mode === "grid" ? mangaCard(m, { delay: i % 6 }) : row(m)));
         results.append(...rows); FX.reveal(results);
-        if (reset && !rows.length) info.replaceChildren(empty("search", T("no_results"), T("no_results_body")));
+        if (reset && !rows.length) info.replaceChildren(adult && !q && !cat && !type ? empty("flame", T("sc_empty_title"), T("sc_empty_body")) : empty("search", T("no_results"), T("no_results_body")));
         more.classList.toggle("hidden", pageNo >= (r.total_pages || 1));
         pageNo += 1;
-      } catch (_) {
+      } catch (e) {
         if (my !== token) return;
+        if (e && e.code === "ADULT_REQUIRED") return adultGate();
         if (reset) results.replaceChildren();
         info.replaceChildren(empty("info", T("error_title"), T("error_body"), h("button", { class: "btn btn-primary", type: "button", onclick: () => load(true) }, T("retry"))));
       } finally { if (my === token) { busy = false; more.removeAttribute("disabled"); } }
@@ -186,11 +217,11 @@
     let timer;
     input.addEventListener("input", () => { box.classList.toggle("has", !!input.value); clearTimeout(timer); timer = setTimeout(() => { q = input.value.trim(); syncUrl(); load(true); }, 320); });
 
-    paintChips(); paintView();
-    S.render(S.page({ title: T("nav_browse"), right: viewBtn, body: [box,
-      h("div", { style: "margin-top:12px" }, chips), h("div", { style: "margin-top:12px" }, sortSeg),
+    paintChips(); paintView(); paintTypes();
+    S.render(S.page({ title: adult ? T("sc_name") : T("nav_browse"), back: adult, right: viewBtn, body: [box,
+      h("div", { style: "margin-top:12px" }, typeChips), h("div", { style: "margin-top:10px" }, chips), h("div", { style: "margin-top:12px" }, sortSeg),
       h("div", { style: "margin-top:18px" }, results), info, h("div", { style: "margin-top:18px" }, more)] }),
-      { tab: "browse", refresh: () => load(true) });
+      { tab: adult ? null : "browse", refresh: () => load(true) });
     load(true);
   }
 
@@ -270,7 +301,8 @@
       bg,
       h("div", { class: "m-head" }, h("div", { class: "tilt-wrap" }, cover(m)),
         h("div", { style: "min-width:0;flex:1" }, h("h2", { text: m.title }),
-          h("div", { class: "m-meta" }, m.category ? h("span", { class: "tag", text: m.category.name }) : null,
+          h("div", { class: "m-meta" }, m.is_adult ? h("span", { class: "tag adult", text: T("adult_badge") }) : null,
+            m.content_type ? h("span", { class: "tag", text: T("type_" + m.content_type) }) : null, m.category ? h("span", { class: "tag", text: m.category.name }) : null,
             statusTag(m.status) ? h("span", { class: "tag " + (m.status === "completed" ? "ok" : "warn"), text: statusTag(m.status) }) : null))),
       h("div", { class: "stats reveal" }, cnt, statVal(statusTag(m.status) || "—", T("stat_status")), statVal(timeAgo(lastDate) || "—", T("stat_update"))),
       h("div", { class: "m-actions" }, cta, favBtn),
@@ -416,16 +448,21 @@
       h("div", { class: "group" }, h("h3", { text: T("theme") }), h("div", { class: "card themes" }, tile("auto", ["#0b0b14", "#f4f5fb", "#7c5cff"], T("theme_auto")),
         ...Theme.THEMES.map((th) => tile(th.id, th.colors, T("theme_" + th.id))))),
       h("div", { class: "group" }, h("h3", { text: T("reader_mode") }), h("div", { class: "card", style: "padding:14px" }, modeSeg)),
+      h("div", { class: "group" }, h("h3", { text: T("adult_settings") }), h("div", { class: "card" },
+        cell("flame", T("sc_name"), adultOk() ? T("adult_badge") : "", () => S.go("#/sainte-culture")),
+        adultOk() && !u.is_admin ? cell("lock", T("adult_lock"), "", async () => {
+          try { const r = await Api.del("/auth/adult-confirm"); S.state.user = r.user; haptic("success"); toast(T("adult_lock_done")); rerender(); }
+          catch (_) { haptic("error"); toast(T("sync_error")); }
+        }) : null)),
       h("div", { class: "group" }, h("h3", { text: T("library") }), h("div", { class: "card" },
         danger(T("clear_history"), "trash", () => Store.clearHistory()), danger(T("clear_favorites"), "heart", () => Store.clearFavorites()))),
-      h("div", { class: "group" }, h("h3", { text: T("community") }), h("div", { class: "card" }, cell("send", T("nexa_channel"), cfg.channel, () => openLink(cfg.channelUrl)),
-        Nexa.demo && location.protocol !== "file:" ? cell("x", T("demo_exit"), "", () => Nexa.exitDemo()) : null)),
+      h("div", { class: "group" }, h("h3", { text: T("community") }), h("div", { class: "card" }, cell("send", T("nexa_channel"), cfg.channel, () => openLink(cfg.channelUrl)))),
       h("div", { class: "group" }, h("h3", { text: T("about") }), h("div", { class: "card" },
-        h("div", { class: "about" }, h("img", { src: "assets/logo-original-192.png", alt: "Manga Gallery" }), h("b", { text: "Nexa Manga" }), h("p", { class: "muted", text: `${T("made_by")} · ${cfg.channel}` })),
+        h("div", { class: "about" }, h("img", { src: "assets/logo-original-192.png", alt: "Manga Gallery" }), h("b", { text: "Manga Gallery FR" }), h("p", { class: "muted", text: `${T("made_by")} · ${cfg.channel}` })),
         h("div", { class: "cell press", role: "button", tabindex: "0", onclick: onVersionTap }, icon("info"), h("span", { class: "grow", text: T("version") }), h("span", { class: "val", text: cfg.version })))),
     ];
     S.render(S.page({ title: T("settings_title"), body }), { tab: "settings", silent: ctx.silent });
   }
 
-  Nexa.views = { home, browse, mangaPage, library, notifications, settings };
+  Nexa.views = { home, browse, sainteCulture, adultGate, mangaPage, library, notifications, settings };
 })();
