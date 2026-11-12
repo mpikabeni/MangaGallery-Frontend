@@ -12,7 +12,10 @@ Un projet **Nexa** · canal : **@Nexa_CG** · version **Finale** · langues : **
 Réglages → ligne **Version** → appuyer **5 fois** → panneau admin.
 - **Mangas** : deux onglets, *Galerie* et *La Sainte Culture · 18+*. « Publier un titre » choisit l'espace, le type, la couverture (lien https)…
   La Sainte Culture n'accepte que webtoon et bande dessinée.
-- **Chapitres** : choisir le titre, le numéro, puis coller les liens d'images des pages (un par ligne).
+- **Chapitres** : choisir le titre et le numéro, puis **téléverser** un PDF, un CBZ/ZIP/CBT ou des images (glisser-déposer).
+  Les pages apparaissent en aperçu : on peut les réordonner (‹ ›) ou en retirer (✕) avant d'enregistrer.
+- **Couvertures** : bouton « Téléverser une image » dans la fiche d'un titre (un lien https reste possible).
+- **Design** : l'admin partage le même design « Aurora glass » et les 6 thèmes que l'application (sélecteur de thème dans la barre latérale).
 
 ## Ouverture
 L'application s'ouvre **uniquement dans Telegram** (bot → « Ouvrir Manga Gallery FR »). Hors Telegram, une page d'accueil renvoie vers le bot.
@@ -33,5 +36,5 @@ js/api.js           client API (auth Telegram, réessais, réveil du serveur)
 js/views.js         accueil, explorer, La Sainte Culture, manga, bibliothèque, notifications, réglages
 js/reader.js        lecteur (vertical / page par page)
 js/app.js           démarrage, porte du canal, routeur
-admin/              panneau d'administration
+admin/              panneau d'administration (même design que l'app)
 ```
