@@ -41,6 +41,10 @@ href="css/mangas.css">
 <script src="../js/config.js"></script>
 <script src="js/safe-html.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js" defer></script>
+<link rel="stylesheet" href="../css/themes.css">
+<link rel="stylesheet" href="css/theme.css">
+<script src="../js/theme.js"></script>
+<script src="js/theme-boot.js"></script>
 </head>
 <body>
 <div class="dashboard">
@@ -120,10 +124,14 @@ href="css/mangas.css">
       <div class="form-group"><label for="manga-description">Description</label>
         <textarea id="manga-description" rows="5" maxlength="5000" placeholder="Résumé du titre..."></textarea></div>
       <div class="form-grid">
-        <div class="form-group"><label for="manga-cover">Couverture (lien https de l'image)</label>
-          <input type="url" id="manga-cover" placeholder="https://..."></div>
-        <div class="form-group"><label for="manga-banner">Bannière (lien https, facultatif)</label>
-          <input type="url" id="manga-banner" placeholder="https://..."></div>
+        <div class="form-group"><label for="manga-cover-file">Couverture</label>
+          <label class="upload-btn"><i data-lucide="upload"></i><span id="cover-btn-label">Téléverser une image</span>
+            <input type="file" id="manga-cover-file" accept="image/*" hidden></label>
+          <input type="url" id="manga-cover" placeholder="…ou colle un lien https (facultatif)"></div>
+        <div class="form-group"><label for="manga-banner-file">Bannière (facultatif)</label>
+          <label class="upload-btn"><i data-lucide="upload"></i><span id="banner-btn-label">Téléverser une image</span>
+            <input type="file" id="manga-banner-file" accept="image/*" hidden></label>
+          <input type="url" id="manga-banner" placeholder="…ou colle un lien https (facultatif)"></div>
       </div>
       <div class="form-grid">
         <div class="form-group"><label for="manga-visibility">Visibilité</label>
