@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta
+name="viewport"
+content="width=device-width,initial-scale=1.0">
+<meta
+http-equiv="X-UA-Compatible"
+content="IE=edge">
+<meta
+name="description"
+content="Importer - Manga Gallery FR">
+<meta
+name="theme-color"
+content="#7C5CFF">
+<title>
+Gestion des Mangas • Manga Gallery FR
+</title>
+<link
+rel="icon"
+type="image/png"
+href="assets/logo.png">
+<link
+rel="preconnect"
+href="https://fonts.googleapis.com">
+<link
+rel="preconnect"
+href="https://fonts.gstatic.com"
+crossorigin>
+<link
+href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"
+rel="stylesheet">
+<link
+rel="stylesheet"
+href="css/dashboard.css">
+<link
+rel="stylesheet"
+href="css/mangas.css">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://telegram.org; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com data:; img-src 'self' data: https: http:; connect-src 'self' https:; object-src 'none'; base-uri 'self'; form-action 'self'">
+<script src="../js/config.js"></script>
+<script src="js/safe-html.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js" defer></script>
+<link rel="stylesheet" href="css/import.css">
+<link rel="stylesheet" href="../css/themes.css">
+<link rel="stylesheet" href="css/theme.css">
+<script src="../js/theme.js"></script>
+<script src="js/theme-boot.js"></script>
+</head>
+<body>
+<div class="dashboard">
+<aside class="sidebar"></aside>
+<main class="main-content">
+
+<header class="topbar">
+  <div class="page-title">
+    <h1>Importer depuis MangaDex</h1>
+    <p>Fiche, couverture et chapitres ajoutés automatiquement</p>
+  </div>
+</header>
+
+<section class="toolbar">
+  <div class="toolbar-left">
+    <div class="section-tabs" id="section-tabs" role="tablist">
+      <button type="button" class="tab active" data-section="normal">Galerie</button>
+      <button type="button" class="tab adult" data-section="sainte_culture">La Sainte Culture · 18+</button>
+    </div>
+    <div class="search-box"><i data-lucide="search"></i><input type="search" id="q" placeholder="Titre (vide = les plus suivis)" autocomplete="off"></div>
+    <select id="lang" class="filter-select">
+      <option value="fr">Chapitres en français</option><option value="en">Chapitres en anglais</option>
+      <option value="es">Español</option><option value="pt-br">Português (BR)</option>
+    </select>
+  </div>
+  <div class="toolbar-right">
+    <button id="go" class="primary-button" type="button"><i data-lucide="search"></i><span>Rechercher</span></button>
+  </div>
+</section>
+
+<section class="notice">
+  <strong>Source : MangaDex.</strong> Les pages sont chargées depuis MangaDex à chaque lecture (rien n'est copié sur ton serveur). MangaDex et les groupes
+  de traduction sont crédités dans l'application. Pas de publicité ni d'abonnement payant. Pour répondre à la demande de retrait d'un groupe, supprime le titre
+  dans <a href="mangas.html">Mangas</a>.
+</section>
+
+<section id="results" class="import-grid" aria-live="polite"></section>
+<div class="import-more"><button id="more" class="secondary-button hidden" type="button">Voir plus de résultats</button></div>
+
+</main>
+</div>
+<script src="js/helpers.js"></script>
+<script src="js/toast.js"></script>
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/sidebar.js"></script>
+<script src="js/import.js"></script>
+<script src="js/page-boot.js"></script>
+</body>
+</html>
