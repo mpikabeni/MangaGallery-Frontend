@@ -29,5 +29,23 @@
     return box;
   };
 
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", aurora); else aurora();
+  /* Tables become stacked cards on phones: every cell needs its column title (CSS shows it with attr(data-label)). */
+  function labelTables() {
+    document.querySelectorAll("table.admin-table").forEach((t) => {
+      const heads = [...t.querySelectorAll("thead th")].map((th) => th.textContent.trim());
+      t.querySelectorAll("tbody tr").forEach((tr) => [...tr.children].forEach((td, i) => {
+        if (!td.dataset.label && heads[i] && td.colSpan <= 1) td.dataset.label = heads[i];
+      }));
+    });
+  }
+  function watchTables() {
+    let queued = false;
+    const run = () => { queued = false; labelTables(); };
+    const obs = new MutationObserver(() => { if (!queued) { queued = true; requestAnimationFrame(run); } });
+    document.querySelectorAll("table.admin-table tbody").forEach((tb) => obs.observe(tb, { childList: true }));
+    labelTables();
+  }
+
+  function ready() { aurora(); watchTables(); }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", ready); else ready();
 })();

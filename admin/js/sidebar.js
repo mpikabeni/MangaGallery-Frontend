@@ -33,7 +33,27 @@
         el("div", { class: "admin-mini-profile" },
           el("div", { class: "admin-info" }, el("h4", { id: "sidebarName", text: (user && (user.name || user.username)) || "Admin" }), el("p", { id: "sidebarRole", text: "Administrateur" })),
           logout),
-        el("a", { href: "../index.html#/settings", class: "menu-item", style: "margin-top:8px" }, icon("arrow-left"), el("span", { text: "Retour à l'application" })),
+        el("a", { href: "../index.html#/", class: "menu-item back-to-app", style: "margin-top:8px" }, icon("arrow-left"), el("span", { text: "Retour à l'application" })),
         window.buildThemePicker ? window.buildThemePicker() : null));
+    buildMobileBar(version);
   };
+
+  /* Phones / tablets: a fixed top bar (Menu + back to the app) and the sidebar becomes a drawer, so EVERY button stays reachable. */
+  function buildMobileBar(version) {
+    if (document.querySelector(".mobile-bar")) return;
+    const menuBtn = el("button", { type: "button", class: "mb-btn", id: "mobile-menu-btn", "aria-label": "Ouvrir le menu", "aria-expanded": "false", "aria-controls": "sidebar-menu" },
+      icon("menu"), el("span", { text: "Menu" }));
+    const back = el("a", { href: "../index.html#/", class: "mb-btn mb-back", "aria-label": "Retour à l'application" }, icon("arrow-left"), el("span", { text: "Application" }));
+    const bar = el("header", { class: "mobile-bar" }, menuBtn, el("strong", { class: "mb-title", text: "Admin · " + version }), back);
+    const backdrop = el("div", { class: "nav-backdrop" });
+    document.body.prepend(backdrop);
+    document.body.prepend(bar);
+    const set = (open) => { document.body.classList.toggle("nav-open", open); menuBtn.setAttribute("aria-expanded", String(open)); };
+    menuBtn.addEventListener("click", () => set(!document.body.classList.contains("nav-open")));
+    backdrop.addEventListener("click", () => set(false));
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape") set(false); });
+    document.querySelector("aside.sidebar").addEventListener("click", (e) => { if (e.target.closest("a")) set(false); });
+    window.addEventListener("resize", () => { if (window.innerWidth > 900) set(false); });
+    if (window.lucide) window.lucide.createIcons();
+  }
 })();
