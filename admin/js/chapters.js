@@ -89,24 +89,51 @@ function updatePagination() {
   $("previous-page").disabled = chapterState.page === 1; $("next-page").disabled = chapterState.page === chapterState.totalPages;
 }
 
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+function uploadError(message) {
+  const box = $("upload-error");
+  box.textContent = message || "";
+  box.classList.toggle("hidden", !message);
+}
+
+/* 1) send the files (progress bar)  2) the server converts the pages in the background: poll until done / error. */
 async function uploadFiles(fileList) {
   const files = [...(fileList || [])];
   if (!files.length) return;
   const bar = $("upload-bar"), box = $("upload-progress"), label = $("upload-label"), zone = $("dropzone");
   const size = files.reduce((n, f) => n + f.size, 0);
   const fd = new FormData(); files.forEach((f) => fd.append("files", f));
-  box.classList.remove("hidden"); zone.classList.add("busy"); bar.style.width = "0%";
+  uploadError("");
+  box.classList.remove("hidden"); zone.classList.add("busy"); bar.classList.remove("indeterminate"); bar.style.width = "0%";
   label.textContent = `Envoi de ${files.length} fichier(s) · ${(size / 1048576).toFixed(1)} Mo…`;
   try {
-    const r = await api.upload("/api/uploads/chapter", fd, (p) => {
+    const start = await api.upload("/api/uploads/chapter", fd, (p) => {
       bar.style.width = Math.round(p * 100) + "%";
-      label.textContent = p < 1 ? `Envoi… ${Math.round(p * 100)} %` : "Traitement des pages (PDF / archive) sur le serveur…";
+      label.textContent = p < 1 ? `Envoi… ${Math.round(p * 100)} %` : "Fichier reçu, démarrage du traitement…";
     });
-    pageUrls = pageUrls.concat(r.pages); r.pages.forEach((u) => unsaved.add(u));
-    renderPreview();
-    showSuccess(`${r.count} page(s) ajoutée(s).` + (r.skipped && r.skipped.length ? ` ${r.skipped.length} ignorée(s).` : ""));
-  } catch (e) { console.error(e); showError(e.message || "Envoi impossible."); }
-  finally { box.classList.add("hidden"); zone.classList.remove("busy"); }
+    bar.classList.add("indeterminate");
+    let fails = 0, last = -1, lastMove = Date.now();
+    for (;;) {
+      await sleep(1500);
+      let job;
+      try { job = await api.get(`/api/uploads/jobs/${start.job_id}`); fails = 0; }
+      catch (e) { if (++fails >= 6) throw new Error("Le serveur ne répond plus. Réessaie dans un instant."); continue; }
+      if (job.status === "done") {
+        pageUrls = pageUrls.concat(job.pages); job.pages.forEach((u) => unsaved.add(u));
+        renderPreview();
+        showSuccess(`${job.count} page(s) ajoutée(s).` + (job.skipped && job.skipped.length ? ` ${job.skipped.length} ignorée(s).` : ""));
+        break;
+      }
+      if (job.status === "error") throw new Error(job.error || "Le traitement a échoué.");
+      if (job.done !== last) { last = job.done; lastMove = Date.now(); }
+      label.textContent = job.done ? `Traitement… ${job.done} page(s) prête(s)` : "Traitement du fichier sur le serveur (les gros PDF prennent un peu de temps)…";
+      if (Date.now() - lastMove > 10 * 60 * 1000) throw new Error("Le traitement est trop long. Réessaie avec un fichier plus léger.");
+    }
+  } catch (e) {
+    console.error(e);
+    const msg = e.message || "Envoi impossible.";
+    uploadError(msg); showError(msg);          // the red message stays in the window until the next attempt
+  } finally { box.classList.add("hidden"); zone.classList.remove("busy"); bar.classList.remove("indeterminate"); }
 }
 
 function allPages() { return pageUrls.concat(pageLines()); }
