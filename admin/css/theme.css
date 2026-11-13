@@ -150,3 +150,83 @@ select option { background: var(--elev); color: var(--text); }
 .admin-table thead, .admin-table thead tr { background: color-mix(in srgb, var(--elev) 75%, transparent) !important; }
 h1, h2, h3, h4, h5, p, span, a, td, th, label, small, strong, div, li, summary { font-family: inherit !important; }
 .hidden { display: none !important; }
+
+
+/* =====================================================================================================
+   RESPONSIVE — every button reachable on any device
+   > 900px : fixed sidebar with labels.   <= 900px : top bar (Menu + back to the app) + sidebar drawer.
+   ===================================================================================================== */
+.mobile-bar, .nav-backdrop { display: none; }
+.sidebar { overflow: hidden !important; display: flex; flex-direction: column; }
+.sidebar-logo { flex: none; }
+.sidebar-menu { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+.sidebar-footer { flex: none; position: static; background: transparent; padding-top: 10px; }
+.sidebar-footer .menu-item, .back-to-app { display: flex; align-items: center; gap: 12px; text-decoration: none !important; }
+.back-to-app span { text-decoration: none !important; }
+.back-to-app { background: color-mix(in srgb, var(--accent) 14%, transparent) !important; color: var(--text) !important; border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent); font-weight: 700; }
+.back-to-app:hover { background: linear-gradient(135deg, var(--accent), var(--accent-2)) !important; color: var(--on-accent) !important; }
+.action-button, .action-btn, .icon-button { min-width: 38px; min-height: 38px; }
+
+@media (max-width: 900px) {
+  /* beats the original "display:none" / 90px icon-only sidebar of dashboard.css */
+  .sidebar { display: flex !important; position: fixed !important; top: 0; bottom: 0; left: 0; z-index: 1002; width: min(86vw, 320px) !important;
+    padding: 18px !important; transform: translateX(-105%) !important; transition: transform .3s cubic-bezier(.2, .8, .2, 1);
+    box-shadow: none; background: color-mix(in srgb, var(--elev) 97%, transparent) !important; }
+  body.nav-open .sidebar { transform: none !important; box-shadow: 24px 0 60px rgba(0, 0, 0, .5); }
+  .sidebar-logo div, .sidebar-menu span, .logout-button span, .sidebar-logo .logo-text { display: block !important; }
+  .sidebar-menu a, .menu-item { display: flex !important; }
+  .nav-backdrop { display: block; position: fixed; inset: 0; z-index: 1001; background: rgba(0, 0, 0, .55); opacity: 0; pointer-events: none; transition: opacity .25s; }
+  body.nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
+  body.nav-open { overflow: hidden; }
+
+  .mobile-bar { display: flex; position: fixed; top: 0; left: 0; right: 0; z-index: 1000; align-items: center; justify-content: space-between; gap: 10px;
+    padding: calc(8px + env(safe-area-inset-top, 0px)) 12px 8px; background: color-mix(in srgb, var(--surface) 88%, transparent);
+    border-bottom: 1px solid var(--line); backdrop-filter: blur(18px) saturate(1.4); -webkit-backdrop-filter: blur(18px) saturate(1.4); }
+  .mb-btn { display: inline-flex; align-items: center; gap: 8px; min-height: 42px; padding: 0 14px; border-radius: 14px; border: 1px solid var(--line);
+    background: color-mix(in srgb, var(--elev) 80%, transparent); color: var(--text); font: 700 14px/1 system-ui, sans-serif; cursor: pointer; text-decoration: none; }
+  .mb-btn svg, .mb-btn i { width: 20px; height: 20px; }
+  .mb-back { background: linear-gradient(120deg, var(--accent), var(--accent-2)); color: var(--on-accent); border: 0; box-shadow: 0 8px 22px var(--glow); }
+  .mb-title { flex: 1; text-align: center; font-size: 13px; letter-spacing: .04em; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .main-content { margin-left: 0 !important; width: 100% !important; padding: calc(72px + env(safe-area-inset-top, 0px)) 14px 90px !important; }
+  .topbar { flex-direction: column !important; align-items: stretch !important; gap: 14px !important; }
+  .topbar .primary-button, .topbar > button { width: 100%; justify-content: center; }
+  .toolbar-left .search-box, .toolbar-left .filter-select, .toolbar-left select { max-width: none; flex: 1 1 100%; width: 100% !important; }
+  .toolbar-right, .toolbar-right button { width: 100% !important; }
+  .section-tabs { width: 100%; } .section-tabs .tab { flex: 1; padding: 10px 8px; }
+  .stats-grid { grid-template-columns: 1fr 1fr !important; }
+  .pagination { flex-wrap: wrap; gap: 10px; justify-content: center !important; }
+  .table-header { flex-wrap: wrap; gap: 8px; }
+  .action-button, .action-btn, .icon-button { min-width: 44px; min-height: 44px; }
+}
+
+/* tables -> stacked cards on phones: no sideways scrolling, the action buttons are always on screen */
+@media (max-width: 760px) {
+  .table-container { overflow: visible !important; }
+  .admin-table { min-width: 0 !important; width: 100% !important; display: block; }
+  .admin-table thead { display: none !important; }
+  .admin-table tbody { display: grid; gap: 12px; }
+  .admin-table tr { display: grid; gap: 4px; padding: 14px; border: 1px solid var(--line); border-radius: 18px; background: color-mix(in srgb, var(--elev) 55%, transparent); }
+  .admin-table td { display: flex !important; align-items: center; justify-content: space-between; gap: 12px; padding: 5px 0 !important; border: 0 !important; text-align: right; min-width: 0 !important; word-break: break-word; }
+  .admin-table td::before { content: attr(data-label); flex: none; color: var(--muted); font-size: 11.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; text-align: left; }
+  .admin-table td[colspan] { display: block !important; text-align: center; }
+  .admin-table td[colspan]::before, .admin-table td:not([data-label])::before { content: none; }
+  .admin-table td .actions, .admin-table td .action-group { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+}
+
+/* modals: scroll inside, the Save / Cancel buttons stay visible */
+.modal-content { max-height: 92dvh; max-height: 92vh; overflow-y: auto; }
+@supports (height: 1dvh) { .modal-content { max-height: 92dvh; } }
+.modal-actions { position: sticky; bottom: -1px; display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; padding: 14px 0 4px; background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--elev) 98%, transparent) 38%); z-index: 2; }
+@media (max-width: 640px) {
+  .form-grid { grid-template-columns: 1fr !important; }
+  .modal { padding: 10px !important; align-items: flex-end; }
+  .modal-content { padding: 18px !important; border-radius: 22px !important; }
+  .modal-actions button { flex: 1 1 140px; justify-content: center; }
+  .preview-grid { grid-template-columns: repeat(3, 1fr) !important; }
+}
+@media (max-width: 900px) {
+  .page-title h1 { font-size: clamp(24px, 7vw, 32px) !important; line-height: 1.15 !important; }
+  .page-title p { font-size: 14px !important; margin-top: 6px !important; }
+  .toolbar-right .secondary-button { justify-content: center; }
+}
