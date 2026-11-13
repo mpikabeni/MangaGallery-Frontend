@@ -125,7 +125,10 @@
         if (e.code === "ADULT_REQUIRED") return Nexa.views.adultGate();
         const notFound = e.status === 404;
         render(page({ title: T("sorry"), back: !ROOTS.has(path), body: empty("info", notFound ? T("not_found") : T("error_title"), notFound ? "" : T("error_body"),
-          h("button", { class: "btn btn-primary", type: "button", onclick: navigate }, icon("refresh"), T("retry"))) }), { tab: ROOTS.has(path) ? (path.split("/")[1] || "home") : null });
+          h("div", null,
+            h("button", { class: "btn btn-primary", type: "button", onclick: navigate }, icon("refresh"), T("retry")),
+            notFound ? null : h("small", { class: "credit", style: "text-align:center;margin-top:14px", text: "Code " + (e.status || e.code || "?") + " · " + String(e.message || "").slice(0, 120) }))) }),
+        { tab: ROOTS.has(path) ? (path.split("/")[1] || "home") : null });
       }
       return;
     }
