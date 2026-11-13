@@ -2,7 +2,7 @@
 "use strict";
 (function () {
   const MENU = [
-    ["index.html", "layout-dashboard", "Tableau de bord"], ["mangas.html", "book-open", "Mangas"], ["chapters.html", "layers", "Chapitres"],
+    ["index.html", "layout-dashboard", "Tableau de bord"], ["mangas.html", "book-open", "Mangas"], ["chapters.html", "layers", "Chapitres"], ["import.html", "download-cloud", "Importer"],
     ["categories.html", "tags", "Catégories"], ["users.html", "users", "Utilisateurs"], ["comments.html", "message-square", "Commentaires"],
     ["notifications.html", "bell", "Notifications"], ["reports.html", "flag", "Signalements"], ["media.html", "image", "Médias"],
     ["roles.html", "shield", "Rôles"], ["statistics.html", "chart-column", "Statistiques"], ["system.html", "database-backup", "Système"],

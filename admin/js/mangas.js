@@ -104,7 +104,7 @@ function renderMangas(total) {
     cell(tr, m.visibility === "public" ? "Public" : "Masqué");
     cell(tr, formatDate(m.created_at));
     const actions = document.createElement("div"); actions.className = "actions";
-    [["view", "eye", "Chapitres", () => { location.href = `chapters.html?manga=${m.id}`; }], ["edit", "pencil", "Modifier", () => editManga(m.id)], ["delete", "trash-2", "Supprimer", () => deleteManga(m.id, m.title)]]
+    [...(m.source === "mangadex" ? [["view", "refresh-cw", "Chercher les nouveaux chapitres", () => syncManga(m)]] : []), ["view", "eye", "Chapitres", () => { location.href = `chapters.html?manga=${m.id}`; }], ["edit", "pencil", "Modifier", () => editManga(m.id)], ["delete", "trash-2", "Supprimer", () => deleteManga(m.id, m.title)]]
       .forEach(([cls, icon, title, fn]) => { const b = document.createElement("button"); b.type = "button"; b.className = "action-button " + cls; b.title = title; const i = document.createElement("i"); i.dataset.lucide = icon; b.append(i); b.addEventListener("click", fn); actions.append(b); });
     cell(tr, actions);
     body.append(tr);
@@ -209,4 +209,12 @@ async function deleteManga(id, title) {
   if (!confirm(`Supprimer « ${title} » et tous ses chapitres ?`)) return;
   try { await api.delete(`/api/mangas/${id}`); showSuccess("Titre supprimé."); await loadMangas(); }
   catch (e) { console.error(e); showError(e.message || "Impossible de supprimer."); }
+}
+
+async function syncManga(m) {
+  try {
+    const r = await api.post(`/api/mangadex/sync/${m.id}`, {});
+    showSuccess(r.added ? `${r.added} nouveau(x) chapitre(s) ajouté(s).` : "Aucun nouveau chapitre.");
+    await loadMangas();
+  } catch (e) { console.error(e); showError(e.message || "Mise à jour impossible."); }
 }

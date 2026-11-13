@@ -165,7 +165,8 @@ function renderPreview() {
 }
 
 function openCreateModal() {
-  chapterState.editing = null; $("chapter-form").reset(); $("chapter-id").value = ""; pageUrls = []; unsaved.clear();
+  chapterState.editing = null; $("chapter-form").reset(); $("chapter-id").value = ""; pageUrls = []; unsaved.clear(); chapterState.imported = false;
+  $("pages-group").classList.remove("hidden"); $("chapter-preview").classList.remove("hidden");
   $("chapter-manga").disabled = false;
   if (chapterState.manga) $("chapter-manga").value = chapterState.manga;
   const forManga = chapterState.items.filter((c) => String(c.manga_id) === String($("chapter-manga").value)).map((c) => Number(c.number));
@@ -185,17 +186,21 @@ async function editChapter(id) {
     $("chapter-status").value = c.status === "draft" ? "draft" : "published";
     $("chapter-visibility").value = c.visibility === "public" ? "public" : "hidden";
     pageUrls = (c.pages || []).slice(); unsaved.clear(); $("chapter-pages").value = "";
+    chapterState.imported = !!c.source;
+    $("pages-group").classList.toggle("hidden", !!c.source);
+    $("chapter-preview").classList.toggle("hidden", !!c.source);
     renderPreview(); $("chapter-modal").classList.remove("hidden");
   } catch (e) { console.error(e); showError(e.message || "Impossible de charger le chapitre."); }
 }
 
 async function saveChapter(event) {
   event.preventDefault();
-  const pages = allPages();
-  if (pageLines().some((u) => !validUrl(u))) return showError("Chaque lien doit être une adresse http(s) valide (un par ligne).");
-  if (!pages.length) return showError("Ajoute au moins une page (téléverse un PDF, un CBZ ou des images).");
+  const pages = chapterState.imported ? [] : allPages();
+  if (!chapterState.imported && pageLines().some((u) => !validUrl(u))) return showError("Chaque lien doit être une adresse http(s) valide (un par ligne).");
+  if (!chapterState.imported && !pages.length) return showError("Ajoute au moins une page (téléverse un PDF, un CBZ ou des images).");
   const payload = { number: Number($("chapter-number").value), title: $("chapter-title").value.trim() || null,
-    status: $("chapter-status").value, visibility: $("chapter-visibility").value, pages };
+    status: $("chapter-status").value, visibility: $("chapter-visibility").value };
+  if (!chapterState.imported) payload.pages = pages;
   const btn = $("save-chapter-button"); btn.disabled = true;
   try {
     if (chapterState.editing) { await api.put(`/api/chapters/${chapterState.editing}`, payload); showSuccess("Chapitre modifié."); }
