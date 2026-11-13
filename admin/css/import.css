@@ -1,0 +1,16 @@
+/* MangaDex import page */
+.notice{margin:0 0 22px;padding:14px 18px;border-radius:18px;border:1px solid var(--border);background:var(--card);color:var(--text-secondary);font-size:13.5px;line-height:1.6}
+.notice strong{color:var(--text)} .notice a{color:var(--primary);font-weight:700}
+.import-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:16px}
+.import-card{display:grid;grid-template-columns:96px 1fr;gap:14px;padding:14px;border:1px solid var(--border);border-radius:20px;background:var(--card)}
+.import-card .cov{width:96px;aspect-ratio:2/3;border-radius:14px;object-fit:cover;background:var(--border)}
+.import-card h3{margin:0 0 4px;font-size:16px;line-height:1.25}
+.import-card .meta{font-size:12.5px;color:var(--text-secondary);margin-bottom:6px}
+.import-card .desc{font-size:13px;color:var(--text-secondary);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;margin:0 0 10px}
+.import-card .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.import-card select{padding:8px 10px;font-size:13px}
+.import-card .primary-button,.import-card .secondary-button{padding:9px 14px;font-size:13px}
+.badge18{display:inline-block;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:800;background:linear-gradient(135deg,#8a1230,#c2185b);color:#fff;margin-left:6px;vertical-align:middle}
+.import-more{display:flex;justify-content:center;margin:22px 0}
+.import-empty{grid-column:1/-1;text-align:center;padding:40px 10px;color:var(--text-secondary)}
+@media(max-width:520px){.import-grid{grid-template-columns:1fr}.import-card{grid-template-columns:84px 1fr}.import-card .cov{width:84px}}
