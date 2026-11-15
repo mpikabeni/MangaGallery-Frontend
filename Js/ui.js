@@ -97,7 +97,7 @@
   function mangaCard(m, opts = {}) {
     const sub = opts.sub !== undefined ? opts.sub : (m.chapters_count ? `${m.chapters_count} ${T("chapters").toLowerCase()}` : "");
     const a = h("a", { class: "mcard reveal", href: `#/manga/${m.id}` },
-      h("div", { class: "tilt" }, cover(m, opts.badge || (m.section === "sainte_culture" ? T("adult_badge") : null))),
+      h("div", { class: "tilt" }, cover(m, opts.badge || (m.coming_soon ? T("soon") : m.section === "sainte_culture" ? T("adult_badge") : null))),
       h("div", { class: "t", text: m.title }),
       sub ? h("div", { class: "s", text: sub }) : null,
       opts.progress != null ? h("div", { class: "progress" }, h("i", { style: `width:${Math.max(4, Math.min(100, opts.progress))}%` })) : null);

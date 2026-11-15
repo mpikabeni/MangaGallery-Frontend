@@ -75,12 +75,13 @@
       S.render(S.page({ brand: true, right: "bell", body: [hs, ...skel(2, 84)] }), { tab: "home" });
     }
     const R = await Promise.allSettled([Api.get("/mangas", { per_page: 12, sort: "latest", section: "normal" }), Api.get("/chapters/latest", { per_page: 10, section: "normal" }),
-      Api.get("/categories"), Api.get("/notifications/me/unread-count")]);
+      Api.get("/categories"), Api.get("/notifications/me/unread-count"), Api.get("/mangas", { coming: 1, section: "normal", per_page: 12 })]);
     if (!ctx.ok()) return;
     if (R[0].status === "rejected" && R[1].status === "rejected") throw R[0].reason;
     const val = (i, d) => (R[i].status === "fulfilled" ? R[i].value : d);
     const items = val(0, {}).items || [], ups = val(1, {}).items || [], cats = val(2, []);
     S.state.unread = val(3, {}).unread || 0;
+    const soonItems = val(4, {}).items || [];
 
     const body = [];
     const first = (user.name || "").split(" ")[0];
@@ -97,6 +98,7 @@
       qtile("heart", T("favorites"), "#ff5d8f", "#ff9d5c", () => S.go("#/library/favorites")),
       qtile("search", T("tile_browse"), "#34d399", "#22d3ee", () => S.go("#/browse"))));
 
+    if (soonItems.length) body.push(soonRail(soonItems));
     const hist = Store.histList().filter((e) => !(e.manga && e.manga.section === "sainte_culture")).slice(0, 10);
     if (hist.length) {
       body.push(h("section", { class: "section reveal" },
@@ -125,6 +127,12 @@
         h("div", { class: "grid" }, items.slice(4).map((m, i) => mangaCard(m, { delay: i % 6 })))));
     }
     S.render(S.page({ brand: true, right: "bell", body }), { tab: "home", refresh: () => home({ ...ctx, silent: true }) });
+  }
+  /* ---- "Bientôt": titles announced but not readable yet */
+  function soonRail(items) {
+    return h("section", { class: "section reveal" },
+      h("div", { class: "section-head" }, h("h2", { text: "🕒 " + T("soon_title") })),
+      h("div", { class: "row-scroll" }, items.map((m, i) => mangaCard(m, { delay: i % 6 }))));
   }
   /* ---- La Sainte Culture (18+) */
   const adultOk = () => { const u = sh().state.user || {}; return !!(u.adult_confirmed || u.is_admin); };
@@ -218,7 +226,9 @@
     input.addEventListener("input", () => { box.classList.toggle("has", !!input.value); clearTimeout(timer); timer = setTimeout(() => { q = input.value.trim(); syncUrl(); load(true); }, 320); });
 
     paintChips(); paintView(); paintTypes();
-    S.render(S.page({ title: adult ? T("sc_name") : T("nav_browse"), back: adult, right: viewBtn, body: [box,
+    const soonBox = h("div");
+    if (adult) Api.get("/mangas", { coming: 1, section, per_page: 12 }).then((r) => { if (ctx.ok() && (r.items || []).length) soonBox.replaceChildren(soonRail(r.items)); }).catch(() => {});
+    S.render(S.page({ title: adult ? T("sc_name") : T("nav_browse"), back: adult, right: viewBtn, body: [box, soonBox,
       h("div", { style: "margin-top:12px" }, typeChips), h("div", { style: "margin-top:10px" }, chips), h("div", { style: "margin-top:12px" }, sortSeg),
       h("div", { style: "margin-top:18px" }, results), info, h("div", { style: "margin-top:18px" }, more)] }),
       { tab: adult ? null : "browse", refresh: () => load(true) });
@@ -252,14 +262,15 @@
         const on = await Store.toggleFav(m);
         paintFav(true); haptic(on ? "success" : "light");
         if (on) FX.burst(x, y, { heart: true, count: 18 });
-        toast(T(on ? "fav_added" : "fav_removed"));
+        toast(T(soon ? (on ? "soon_alert_on" : "soon_alert_off") : (on ? "fav_added" : "fav_removed")));
       } catch (_) { paintFav(false); haptic("error"); toast(T("sync_error")); }
     });
     paintFav(false);
 
+    const soon = !!m.coming_soon;
     const first = chapters[0], e0 = entryOf();
     const resume = e0 && chapters.find((c) => c.id === e0.chapter_id);
-    const cta = chapters.length
+    const cta = soon ? h("div", { class: "btn", style: "flex:1", text: "🕒 " + T("soon_available") }) : chapters.length
       ? h("a", { class: "btn btn-primary", href: `#/read/${(resume || first).id}` }, icon("play", "fill"), resume ? T("continue_reading", { n: num(resume.number) }) : T("start_reading"))
       : h("div", { class: "btn", style: "flex:1", text: T("no_chapters") });
 
@@ -301,18 +312,19 @@
       bg,
       h("div", { class: "m-head" }, h("div", { class: "tilt-wrap" }, cover(m)),
         h("div", { style: "min-width:0;flex:1" }, h("h2", { text: m.title }),
-          h("div", { class: "m-meta" }, m.is_adult ? h("span", { class: "tag adult", text: T("adult_badge") }) : null,
+          h("div", { class: "m-meta" }, soon ? h("span", { class: "tag warn", text: T("soon") }) : null, m.is_adult ? h("span", { class: "tag adult", text: T("adult_badge") }) : null,
             m.content_type ? h("span", { class: "tag", text: T("type_" + m.content_type) }) : null,
             m.chapters_count ? h("span", { class: "tag", text: m.chapters_count > 1 && m.first_chapter != null ? T("chapters_range", { a: num(m.first_chapter), b: num(m.last_chapter) }) : T("chapters") + " " + num(m.last_chapter || 1) }) : null, m.category ? h("span", { class: "tag", text: m.category.name }) : null,
             statusTag(m.status) ? h("span", { class: "tag " + (m.status === "completed" ? "ok" : "warn"), text: statusTag(m.status) }) : null))),
-      h("div", { class: "stats reveal" }, cnt, statVal(statusTag(m.status) || "—", T("stat_status")), statVal(timeAgo(lastDate) || "—", T("stat_update"))),
+      soon ? null : h("div", { class: "stats reveal" }, cnt, statVal(statusTag(m.status) || "—", T("stat_status")), statVal(timeAgo(lastDate) || "—", T("stat_update"))),
       h("div", { class: "m-actions" }, cta, favBtn),
       readCount ? h("div", { style: "margin-top:12px" }, h("div", { class: "progress" }, h("i", { style: `width:${Math.max(5, Math.round((readCount / chapters.length) * 100))}%` })),
         h("small", { class: "muted", text: T("read_progress", { a: readCount, b: chapters.length }) })) : null,
       h("section", { class: "section" }, descEl, more,
         m.source === "mangadex" && m.source_url ? h("small", { class: "credit" }, T("credit_source") + " ",
           h("a", { href: m.source_url, onclick: (e) => { e.preventDefault(); openLink(m.source_url); }, text: "MangaDex" })) : null),
-      h("section", { class: "section" }, tabs, h("div", { style: "margin-top:14px" }, chapPanel, comPanel)),
+      soon ? h("section", { class: "soon-box" }, h("b", { text: "🕒 " + T("soon_title_box") }), h("p", { text: T("soon_body") }))
+           : h("section", { class: "section" }, tabs, h("div", { style: "margin-top:14px" }, chapPanel, comPanel)),
     ];
     S.render(S.page({ title: m.title, back: true, body }), { tab: null });
     FX.countUp(cnt.firstChild, chapters.length, 800);
