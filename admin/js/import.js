@@ -19,7 +19,14 @@ async function initializeImportPage() {
   });
   $("go").addEventListener("click", () => search(true));
   $("q").addEventListener("keydown", (e) => { if (e.key === "Enter") search(true); });
-  ["lang", "only-completed"].forEach((id) => $(id).addEventListener("change", () => search(true)));
+  ["lang", "only-completed", "coming-mode"].forEach((id) => $(id).addEventListener("change", () => search(true)));
+  $("check-coming").addEventListener("click", async (e) => {
+    const b = e.currentTarget; b.disabled = true;
+    try {
+      const r = await api.post("/api/mangadex/check-coming", {});
+      showSuccess(r.count ? `${r.count} titre(s) sorti(s) : ${r.released.join(", ")}` : "Aucun titre « Bientôt » n'est encore complet.");
+    } catch (err) { showError(err.message || "Vérification impossible."); } finally { b.disabled = false; }
+  });
   $("only-complete").addEventListener("change", applyFilters);
   $("more").addEventListener("click", () => search(false));
   await search(true);
@@ -32,7 +39,7 @@ async function search(reset) {
   if (reset) { state.token++; state.queue = []; state.offset = 0; box.replaceChildren(note("Recherche sur MangaDex…")); more.classList.add("hidden"); }
   try {
     const r = await api.get("/api/mangadex/search", { q: $("q").value.trim(), section: state.section, lang: $("lang").value,
-      offset: state.offset, completed: $("only-completed").checked ? 1 : 0 });
+      offset: state.offset, completed: $("only-completed").checked ? 1 : 0, coming: $("coming-mode").checked ? 1 : 0 });
     if (reset) box.replaceChildren();
     if (!r.items.length && reset) box.replaceChildren(note("Aucun résultat. Essaie un autre titre, une autre langue, ou décoche « terminées »."));
     r.items.forEach((it) => box.append(card(it)));
@@ -62,21 +69,26 @@ function pump() {
 }
 
 function applyFilters() {
-  const needComplete = $("only-complete").checked;
+  const needComplete = $("only-complete").checked && !$("coming-mode").checked;
   let hidden = 0;
   document.querySelectorAll(".import-card").forEach((c) => {
     const info = c._info;
-    const hide = !!info && (info.count === 0 || (needComplete && !info.complete));
+    // normal mode: only complete titles with chapters.  "Bientôt" mode: only titles that are NOT complete yet (complete ones are imported normally)
+    const hide = !!info && (c._coming ? info.complete : (info.count === 0 || (needComplete && !info.complete)));
     c.classList.toggle("hidden", hide);
     if (hide) hidden++;
   });
   const n = $("hidden-note");
-  n.textContent = hidden ? `${hidden} titre(s) masqué(s) : sans chapitre dans cette langue${needComplete ? " ou incomplets" : ""}. ${needComplete ? "Décoche « tous les chapitres » pour les voir." : ""}` : "";
+  n.textContent = !hidden ? "" : $("coming-mode").checked
+    ? `${hidden} titre(s) masqué(s) : déjà complets en français, importe-les en mode normal.`
+    : `${hidden} titre(s) masqué(s) : sans chapitre dans cette langue${needComplete ? " ou incomplets" : ""}. ${needComplete ? "Décoche « tous les chapitres » pour les voir." : ""}`;
   n.classList.toggle("hidden", !hidden);
 }
 
 function card(it) {
   const c = el("article", "import-card");
+  const comingMode = $("coming-mode").checked;
+  c._coming = comingMode;
   const img = el("img", "cov"); img.alt = ""; img.loading = "lazy"; img.referrerPolicy = "no-referrer";
   if (it.cover_url) img.src = it.cover_url;
   const info = el("div");
@@ -95,10 +107,10 @@ function card(it) {
   const sel = el("select");
   allowed.forEach((t) => { const o = el("option", null, TYPE_LABELS[t]); o.value = t; sel.append(o); });
   sel.value = allowed.includes(it.type_guess) ? it.type_guess : allowed[0];
-  const btn = el("button", "primary-button", "Importer fiche + chapitres"); btn.type = "button"; btn.disabled = true;
+  const btn = el("button", "primary-button", comingMode ? "Ajouter à « Bientôt »" : "Importer fiche + chapitres"); btn.type = "button"; btn.disabled = true;
   const row = el("div", "row"); row.append(sel, btn);
   const link = () => { const a = el("a", "secondary-button", "Voir dans Mangas"); a.href = "mangas.html"; return a; };
-  if (it.imported_id) btn.textContent = "Déjà importé · mettre à jour";
+  if (it.imported_id) btn.textContent = comingMode ? "Déjà ajouté" : "Déjà importé · mettre à jour";
 
   const token = state.token;
   state.queue.push({ token, run: async () => {
@@ -107,8 +119,8 @@ function card(it) {
       c._info = i;
       count.classList.remove("loading");
       if (!i.count) {
-        count.textContent = "0 chapitre dans cette langue : titre ignoré.";
-        count.classList.add("bad"); btn.disabled = true;
+        count.textContent = comingMode ? "0 chapitre en français pour l'instant · idéal pour « Bientôt »" : "0 chapitre dans cette langue : titre ignoré.";
+        count.classList.add(comingMode ? "warn" : "bad"); btn.disabled = !comingMode;
       } else {
         const missing = i.missing_count ? ` · ⚠ ${i.missing_count} manquant(s) (${i.missing.join(", ")}${i.missing_count > i.missing.length ? "…" : ""})` : "";
         count.textContent = `Chapitres ${num(i.first)} → ${num(i.last)} · ${i.count} chapitre(s)` + (i.complete ? " · ✓ complet" : missing);
@@ -122,8 +134,8 @@ function card(it) {
   btn.addEventListener("click", async () => {
     btn.disabled = true; sel.disabled = true; btn.textContent = "Import en cours… (jusqu'à une minute)";
     try {
-      const r = await api.post("/api/mangadex/import", { id: it.id, section: state.section, content_type: sel.value, lang, notify: $("notify").checked });
-      const msg = r.already ? `${r.added} nouveau(x) chapitre(s)`
+      const r = await api.post("/api/mangadex/import", { id: it.id, section: state.section, content_type: sel.value, lang, notify: $("notify").checked, mode: comingMode ? "coming" : "normal" });
+      const msg = r.coming ? "Ajouté à « Bientôt » : il sortira automatiquement quand il sera complet en français" : r.already ? `${r.added} nouveau(x) chapitre(s)`
         : `Importé · chapitres ${num(r.first)} → ${num(r.last)} (${r.count}) · ${SYN[r.synopsis] || ""}${r.notified ? " · utilisateurs prévenus" : ""}`;
       showSuccess(`${it.title} : ${msg}.`);
       row.replaceChildren(el("span", "meta", msg), link());
