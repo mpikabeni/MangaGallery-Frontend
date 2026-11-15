@@ -372,3 +372,12 @@ textarea { resize: none; min-height: 78px; }
 .adult-seal svg { width: 34px; height: 34px; } .adult-seal b { font-size: 20px; font-weight: 800; }
 .adult-gate .sc-sub { font-weight: 700; color: #e0306f; }
 .tag.adult { background: linear-gradient(135deg, #8a1230, #c2185b); color: #fff; border-color: transparent; }
+
+.credit { display: block; margin-top: 10px; font-size: 12.5px; color: var(--muted); line-height: 1.5; }
+.credit a { color: var(--accent); font-weight: 700; text-decoration: underline; }
+.reader-end .credit { text-align: center; margin: 4px 0 14px; }
+
+.soon-box { margin: 18px 0; padding: 18px; border-radius: 20px; border: 1px dashed color-mix(in srgb, var(--accent) 55%, transparent);
+  background: color-mix(in srgb, var(--accent) 9%, transparent); line-height: 1.5; }
+.soon-box b { display: block; font-size: 16px; margin-bottom: 6px; }
+.soon-box p { margin: 0; color: var(--muted); font-size: 14px; }
