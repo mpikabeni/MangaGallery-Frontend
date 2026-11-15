@@ -36,11 +36,13 @@
       const gear = h("button", { class: "icon-btn", type: "button", "aria-label": T("reader_settings"), onclick: openSettings }, icon("sliders"));
       const top = h("div", { class: "reader-bar top" },
         h("button", { class: "icon-btn", type: "button", "aria-label": T("reader_back"), onclick: goManga }, icon("back")),
-        h("div", { class: "ttl" }, h("b", { text: manga.title }), h("span", { text: T("chapter_n", { n: num(ch.number) }) + (ch.title ? " — " + ch.title : "") })), gear);
+        h("div", { class: "ttl" }, h("b", { text: manga.title }), h("span", { text: T("chapter_n", { n: num(ch.number) }) + (ch.title ? " — " + ch.title : "") + (ch.group_name ? " · " + ch.group_name : "") })), gear);
       const bottom = h("div", { class: "reader-bar bottom" }, h("div", { class: "rb-row" }, prev, scrub, label, next));
 
       const endBox = () => h("div", { class: "reader-end" },
         h("div", { class: "big", text: r.next_id ? T("reader_end_title") : T("reader_last") }),
+        ch.source === "mangadex" ? h("div", { class: "credit" }, T("credit_chapter", { g: ch.group_name || "—" }) + " ",
+          ch.source_url ? h("a", { href: ch.source_url, target: "_blank", rel: "noopener", text: "MangaDex" }) : null) : null,
         r.next_id ? h("button", { class: "btn btn-primary", type: "button", onclick: () => navTo(r.next_id) }, T("reader_next"), icon("chevron")) : null,
         h("button", { class: "btn", type: "button", onclick: goManga, text: T("reader_back") }));
 

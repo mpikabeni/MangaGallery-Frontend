@@ -273,7 +273,7 @@
       list.replaceChildren(...(rows.length ? stagger(rows.map((c) => {
         const date = c.published_at;
         return h("a", { class: "chap" + (readSet.has(c.id) ? " read" : ""), href: `#/read/${c.id}` },
-          h("div", {}, h("b", {}, T("chapter_n", { n: num(c.number) }) + (c.title ? " — " + c.title : ""), date && isRecent(date) ? h("span", { class: "pill-new", text: T("new_pill") }) : null), h("small", { text: timeAgo(date) })),
+          h("div", {}, h("b", {}, T("chapter_n", { n: num(c.number) }) + (c.title ? " — " + c.title : ""), date && isRecent(date) ? h("span", { class: "pill-new", text: T("new_pill") }) : null), h("small", { text: timeAgo(date) + (c.group_name ? " · " + c.group_name : "") })),
           h("div", { class: "state" }, cur && cur.chapter_id === c.id && !readSet.has(c.id) ? h("span", { text: `${cur.page}/${cur.total || "?"}` }) : null,
             readSet.has(c.id) ? icon("checkcircle", "check") : icon("chevron")));
       }), 12) : [empty("book", T("no_chapters"))]));
@@ -302,13 +302,16 @@
       h("div", { class: "m-head" }, h("div", { class: "tilt-wrap" }, cover(m)),
         h("div", { style: "min-width:0;flex:1" }, h("h2", { text: m.title }),
           h("div", { class: "m-meta" }, m.is_adult ? h("span", { class: "tag adult", text: T("adult_badge") }) : null,
-            m.content_type ? h("span", { class: "tag", text: T("type_" + m.content_type) }) : null, m.category ? h("span", { class: "tag", text: m.category.name }) : null,
+            m.content_type ? h("span", { class: "tag", text: T("type_" + m.content_type) }) : null,
+            m.chapters_count ? h("span", { class: "tag", text: m.chapters_count > 1 && m.first_chapter != null ? T("chapters_range", { a: num(m.first_chapter), b: num(m.last_chapter) }) : T("chapters") + " " + num(m.last_chapter || 1) }) : null, m.category ? h("span", { class: "tag", text: m.category.name }) : null,
             statusTag(m.status) ? h("span", { class: "tag " + (m.status === "completed" ? "ok" : "warn"), text: statusTag(m.status) }) : null))),
       h("div", { class: "stats reveal" }, cnt, statVal(statusTag(m.status) || "—", T("stat_status")), statVal(timeAgo(lastDate) || "—", T("stat_update"))),
       h("div", { class: "m-actions" }, cta, favBtn),
       readCount ? h("div", { style: "margin-top:12px" }, h("div", { class: "progress" }, h("i", { style: `width:${Math.max(5, Math.round((readCount / chapters.length) * 100))}%` })),
         h("small", { class: "muted", text: T("read_progress", { a: readCount, b: chapters.length }) })) : null,
-      h("section", { class: "section" }, descEl, more),
+      h("section", { class: "section" }, descEl, more,
+        m.source === "mangadex" && m.source_url ? h("small", { class: "credit" }, T("credit_source") + " ",
+          h("a", { href: m.source_url, onclick: (e) => { e.preventDefault(); openLink(m.source_url); }, text: "MangaDex" })) : null),
       h("section", { class: "section" }, tabs, h("div", { style: "margin-top:14px" }, chapPanel, comPanel)),
     ];
     S.render(S.page({ title: m.title, back: true, body }), { tab: null });
@@ -393,7 +396,8 @@
     const markAll = items.some((n) => !n.is_read)
       ? h("button", { class: "icon-btn", type: "button", "aria-label": T("mark_all_read"), onclick: async () => { haptic("success"); await Api.patch("/notifications/me/read-all").catch(() => {}); S.state.unread = 0; notifications(ctx); } }, icon("check")) : null;
     S.render(S.page({ title: T("notif_title"), back: true, right: markAll, body: items.length
-      ? h("div", { class: "list stagger" }, stagger(items.map((n) => h("div", { class: "item" + (n.is_read ? "" : " unread") },
+      ? h("div", { class: "list stagger" }, stagger(items.map((n) => h("div", { class: "item" + (n.is_read ? "" : " unread") + (n.data && n.data.manga_id ? " press" : ""),
+          onclick: n.data && n.data.manga_id ? () => { haptic("select"); Api.patch(`/notifications/${n.id}/read`).catch(() => {}); S.go("#/manga/" + n.data.manga_id); } : null },
         h("span", { class: "avatar", style: "width:42px;height:42px" }, icon("bell")),
         h("div", { class: "body", style: "white-space:normal" }, h("b", { text: n.title, style: "white-space:normal" }),
           h("span", { text: n.message, style: "display:block;margin-top:2px;color:var(--text);opacity:.85" }), h("span", { text: timeAgo(n.created_at) }))))))

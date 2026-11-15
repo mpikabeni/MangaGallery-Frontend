@@ -190,6 +190,12 @@
     const sp = tg && tg.initDataUnsafe && tg.initDataUnsafe.start_param;           // deep link: ?startapp=m12
     const m = sp && /^m(\d{1,9})$/.exec(sp);
     if (m && !location.hash) location.hash = `#/manga/${m[1]}`;
+    // deep link from the bot's "Lire maintenant" button: https://site/?m=<manga id>   (Telegram may put its own #tgWebApp… data in the hash)
+    const qm = new URLSearchParams(location.search).get("m");
+    if (qm && /^\d{1,9}$/.test(qm)) {
+      const h0 = location.hash;
+      if (!h0 || h0 === "#" || h0 === "#/" || h0.startsWith("#tgWebApp")) { history.replaceState(null, "", location.pathname); location.hash = `#/manga/${qm}`; }
+    }
     if (tg && tg.BackButton) { tg.BackButton.offClick && tg.BackButton.offClick(onBack); tg.BackButton.onClick(onBack); }
     window.removeEventListener("hashchange", navigate);
     window.addEventListener("hashchange", navigate);

@@ -56,6 +56,7 @@
       net_title: "Serveur injoignable", net_body: "Impossible de joindre le serveur Manga Gallery FR. Vérifie ta connexion puis réessaie dans un instant.",
       check_title: "Vérification impossible", check_body: "La vérification du canal est momentanément impossible. Réessaie dans un instant.",
       rate_title: "Trop de tentatives", rate_body: "Patiente une minute puis réessaie.",
+      chapters_range: "Chapitres {a} → {b}", credit_source: "Fiche et chapitres fournis par", credit_chapter: "Chapitre fourni par MangaDex · Traduction : {g}.",
       list_title: "Toutes les séries", tagline_home: "Lis. Découvre. Partage.", no_comments_yet: "Aucun commentaire pour le moment",
     },
     en: {
@@ -112,6 +113,7 @@
       net_title: "Server unreachable", net_body: "Could not reach the Manga Gallery FR server. Check your connection and try again shortly.",
       check_title: "Verification failed", check_body: "The channel check is temporarily unavailable. Try again shortly.",
       rate_title: "Too many attempts", rate_body: "Wait a minute, then try again.",
+      chapters_range: "Chapters {a} → {b}", credit_source: "Title and chapters provided by", credit_chapter: "Chapter provided by MangaDex · Translation: {g}.",
       list_title: "All series", tagline_home: "Read. Discover. Share.", no_comments_yet: "No comments yet",
     },
   };
