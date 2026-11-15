@@ -100,7 +100,7 @@ function renderMangas(total) {
     cell(tr, TYPE_LABELS[m.content_type] || m.content_type);
     cell(tr, (m.category && m.category.name) || "—");
     const st = document.createElement("span"); st.className = "status " + m.status; st.textContent = STATUS_LABELS[m.status] || m.status; cell(tr, st);
-    cell(tr, m.chapters_count || 0);
+    cell(tr, m.chapters_count ? (m.chapters_count > 1 && m.first_chapter != null ? `${m.chapters_count} (${m.first_chapter} → ${m.last_chapter})` : String(m.chapters_count)) : "0 · caché");
     cell(tr, m.visibility === "public" ? "Public" : "Masqué");
     cell(tr, formatDate(m.created_at));
     const actions = document.createElement("div"); actions.className = "actions";
@@ -148,6 +148,7 @@ function openCreateModal() {
   $("manga-form").reset();
   $("manga-id").value = "";
   resetLabels();
+  $("notify-row").classList.remove("hidden");
   $("manga-section").value = mangaState.section;           // on publie dans l'onglet courant
   paintFormTypes(mangaState.type || undefined);
   $("modal-title").textContent = mangaState.section === "sainte_culture" ? "Publier dans La Sainte Culture (18+)" : "Publier dans la Galerie";
@@ -162,6 +163,7 @@ async function editManga(id) {
     const r = await api.get(`/api/mangas/${id}`);
     const m = r.manga || r;
     mangaState.editing = id;
+    $("notify-row").classList.add("hidden");
     $("modal-title").textContent = "Modifier le titre";
     $("manga-id").value = m.id;
     $("manga-section").value = m.section || "normal";
@@ -190,6 +192,7 @@ async function saveManga(event) {
     cover_url: cover || null, banner_url: banner || null,
   };
   const slug = $("manga-slug").value.trim(); if (slug) payload.slug = slug;
+  if (!mangaState.editing) payload.notify = $("manga-notify").checked;
   const btn = $("save-button"); btn.disabled = true;
   try {
     if (mangaState.editing) { await api.put(`/api/mangas/${mangaState.editing}`, payload); showSuccess("Titre modifié."); }
