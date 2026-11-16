@@ -5,7 +5,8 @@ const TYPE_LABELS = { manga: "Manga", webtoon: "Webtoon", comic: "Bande dessiné
 const TYPES = { normal: ["manga", "webtoon", "comic"], sainte_culture: ["webtoon", "comic"] };
 const STATUS = { ongoing: "En cours", completed: "Terminé", paused: "En pause" };
 const SYN = { vf: "synopsis VF", auto: "synopsis traduit automatiquement", en: "synopsis en anglais", none: "sans synopsis" };
-const state = { section: "normal", offset: 0, total: 0, busy: false, token: 0, queue: [], running: false };
+const state = { section: "normal", offset: 0, total: 0, busy: false, token: 0, queue: [], running: false, auto: 0 };
+const MIN_VISIBLE = 8;          // keep loading the next results until at least this many valid titles are shown
 const $ = (id) => document.getElementById(id);
 const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
 const num = (n) => (Number.isInteger(n) ? String(n) : String(n));
@@ -36,7 +37,7 @@ async function search(reset) {
   if (state.busy) return;
   state.busy = true;
   const box = $("results"), more = $("more");
-  if (reset) { state.token++; state.queue = []; state.offset = 0; box.replaceChildren(note("Recherche sur MangaDex…")); more.classList.add("hidden"); }
+  if (reset) { state.token++; state.queue = []; state.offset = 0; state.auto = 0; box.replaceChildren(note("Recherche sur MangaDex…")); more.classList.add("hidden"); }
   try {
     const r = await api.get("/api/mangadex/search", { q: $("q").value.trim(), section: state.section, lang: $("lang").value,
       offset: state.offset, completed: $("only-completed").checked ? 1 : 0, coming: $("coming-mode").checked ? 1 : 0 });
@@ -65,28 +66,31 @@ function pump() {
       await new Promise((r) => setTimeout(r, 350));
     }
     state.running = false;
+    const shown = document.querySelectorAll(".import-card:not(.hidden)").length;
+    if (shown < MIN_VISIBLE && state.offset < state.total && state.auto < 5 && !state.busy) { state.auto++; search(false); }
   })();
 }
 
 function applyFilters() {
   const needComplete = $("only-complete").checked && !$("coming-mode").checked;
-  let hidden = 0;
+  let hidden = 0, pending = 0;
   document.querySelectorAll(".import-card").forEach((c) => {
     const info = c._info;
+    if (!info && !c._failed) { c.classList.add("hidden"); pending++; return; }      // not counted yet
     // normal mode: only complete titles with chapters.  "Bientôt" mode: only titles that are NOT complete yet (complete ones are imported normally)
     const hide = !!info && (c._coming ? info.complete : (info.count === 0 || (needComplete && !info.complete)));
     c.classList.toggle("hidden", hide);
     if (hide) hidden++;
   });
   const n = $("hidden-note");
-  n.textContent = !hidden ? "" : $("coming-mode").checked
+  n.textContent = pending ? `Vérification des chapitres en français… ${pending} titre(s) restant(s).` : !hidden ? "" : $("coming-mode").checked
     ? `${hidden} titre(s) masqué(s) : déjà complets en français, importe-les en mode normal.`
     : `${hidden} titre(s) masqué(s) : sans chapitre dans cette langue${needComplete ? " ou incomplets" : ""}. ${needComplete ? "Décoche « tous les chapitres » pour les voir." : ""}`;
-  n.classList.toggle("hidden", !hidden);
+  n.classList.toggle("hidden", !hidden && !pending);
 }
 
 function card(it) {
-  const c = el("article", "import-card");
+  const c = el("article", "import-card hidden");     // hidden until the chapters are counted: no title with 0 chapters is ever shown
   const comingMode = $("coming-mode").checked;
   c._coming = comingMode;
   const img = el("img", "cov"); img.alt = ""; img.loading = "lazy"; img.referrerPolicy = "no-referrer";
@@ -127,7 +131,7 @@ function card(it) {
         chips.append(el("span", "chip " + (i.complete ? "ok" : "warn"), i.complete ? "Complet" : "Incomplet"));
         btn.disabled = false;
       }
-    } catch (e) { count.classList.remove("loading"); count.textContent = "Comptage impossible : " + (e.message || "erreur"); btn.disabled = false; }
+    } catch (e) { c._failed = true; count.classList.remove("loading"); count.textContent = "Comptage impossible : " + (e.message || "erreur") + " (relance la recherche)"; btn.disabled = true; }
     applyFilters();
   } });
 
