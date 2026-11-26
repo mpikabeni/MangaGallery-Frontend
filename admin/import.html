@@ -54,10 +54,18 @@ href="css/mangas.css">
 
 <header class="topbar">
   <div class="page-title">
-    <h1>Importer depuis MangaDex</h1>
-    <p>Fiche, couverture et chapitres ajoutés automatiquement</p>
+    <h1>Importer depuis les sites</h1>
+    <p>5 sources : une partie par site. MangaDex ajoute aussi les chapitres, les autres importent la fiche.</p>
   </div>
 </header>
+
+<nav class="source-tabs" id="source-tabs" role="tablist" aria-label="Sources">
+  <button type="button" class="source-tab active" data-source="mangadex"><b>MangaDex</b><small>fiche + chapitres</small></button>
+  <button type="button" class="source-tab" data-source="anilist"><b>AniList</b><small>fiche</small></button>
+  <button type="button" class="source-tab" data-source="jikan"><b>MyAnimeList</b><small>via Jikan · fiche</small></button>
+  <button type="button" class="source-tab" data-source="kitsu"><b>Kitsu</b><small>fiche</small></button>
+  <button type="button" class="source-tab" data-source="mangaupdates"><b>MangaUpdates</b><small>fiche</small></button>
+</nav>
 
 <section class="toolbar">
   <div class="toolbar-left">
@@ -66,7 +74,11 @@ href="css/mangas.css">
       <button type="button" class="tab adult" data-section="sainte_culture">La Sainte Culture · 18+</button>
     </div>
     <div class="search-box"><i data-lucide="search"></i><input type="search" id="q" placeholder="Titre (vide = les plus suivis)" autocomplete="off"></div>
-    <select id="lang" class="filter-select">
+    <select id="format" class="filter-select" aria-label="Origine">
+      <option value="">Toutes origines</option><option value="manhwa">Manhwa (Corée)</option>
+      <option value="manhua">Manhua (Chine)</option><option value="manga">Manga (Japon)</option>
+    </select>
+    <select id="lang" class="filter-select mdx-only">
       <option value="fr">Chapitres en français (VF)</option><option value="en">Chapitres en anglais</option>
       <option value="es">Español</option><option value="pt-br">Português (BR)</option>
     </select>
@@ -77,19 +89,17 @@ href="css/mangas.css">
 </section>
 
 <section class="options">
-  <label class="check"><input type="checkbox" id="only-completed" checked><span>Séries <b>terminées</b> seulement</span></label>
-  <label class="check"><input type="checkbox" id="only-complete" checked><span>Seulement si <b>tous les chapitres</b> existent dans cette langue</span></label>
-  <label class="check"><input type="checkbox" id="coming-mode"><span>Mode <b>« Bientôt »</b> : voir les titres <b>pas encore complets</b> en français et les ajouter comme « à venir » (sans chapitres)</span></label>
-  <label class="check"><input type="checkbox" id="notify" checked><span><b>Prévenir les utilisateurs</b> (bot + application) à la sortie</span></label>
+  <label class="check mdx-only"><input type="checkbox" id="only-completed" checked><span>Séries <b>terminées</b> seulement</span></label>
+  <label class="check mdx-only"><input type="checkbox" id="only-complete" checked><span>Seulement si <b>tous les chapitres</b> existent dans cette langue</span></label>
+  <label class="check mdx-only"><input type="checkbox" id="coming-mode"><span>Mode <b>« Bientôt »</b> : voir les titres <b>pas encore complets</b> en français et les ajouter comme « à venir » (sans chapitres)</span></label>
+  <label class="check mdx-only"><input type="checkbox" id="notify" checked><span><b>Prévenir les utilisateurs</b> (bot + application) à la sortie</span></label>
+  <label class="check cat-only hidden"><span>Après l'import :&nbsp;
+    <select id="visibility" class="filter-select"><option value="public">afficher dans « Bientôt » (sans chapitres)</option><option value="hidden">garder masqué (brouillon)</option></select></span></label>
 </section>
-<div class="coming-actions"><button id="check-coming" class="secondary-button" type="button">Vérifier maintenant les titres « Bientôt » devenus complets</button></div>
+<div class="coming-actions mdx-only"><button id="check-coming" class="secondary-button" type="button">Vérifier maintenant les titres « Bientôt » devenus complets</button></div>
 <p id="hidden-note" class="hidden-note hidden"></p>
 
-<section class="notice">
-  <strong>Source : MangaDex.</strong> Les pages sont chargées depuis MangaDex à chaque lecture (rien n'est copié sur ton serveur). MangaDex et les groupes
-  de traduction sont crédités dans l'application. Pas de publicité ni d'abonnement payant. Pour répondre à la demande de retrait d'un groupe, supprime le titre
-  dans <a href="mangas.html">Mangas</a>.
-</section>
+<section class="notice" id="notice"></section>
 
 <section id="results" class="import-grid" aria-live="polite"></section>
 <div class="import-more"><button id="more" class="secondary-button hidden" type="button">Voir plus de résultats</button></div>

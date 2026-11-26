@@ -53,7 +53,10 @@ href="css/chapters.css">
 
 <header class="topbar">
   <div class="page-title"><h1>Gestion des Chapitres</h1><p>Ajouter les pages (liens d'images) de chaque chapitre</p></div>
-  <button id="add-chapter" class="primary-button" type="button"><i data-lucide="plus"></i><span>Ajouter un chapitre</span></button>
+  <div class="topbar-actions">
+    <button id="add-batch" class="secondary-button" type="button"><i data-lucide="files"></i><span>Plusieurs chapitres</span></button>
+    <button id="add-chapter" class="primary-button" type="button"><i data-lucide="plus"></i><span>Ajouter un chapitre</span></button>
+  </div>
 </header>
 
 <section class="toolbar">
@@ -104,10 +107,14 @@ href="css/chapters.css">
       </div>
       <div class="form-group" id="pages-group">
         <label>Pages du chapitre</label>
+        <div class="quality-row"><label for="chapter-quality">Compression</label>
+          <select id="chapter-quality" class="filter-select">
+            <option value="normal">Équilibrée (recommandé)</option><option value="eco">Économique (le plus léger)</option><option value="hd">Haute qualité</option>
+          </select></div>
         <div id="dropzone" class="dropzone" tabindex="0" role="button">
           <i data-lucide="upload-cloud"></i>
           <strong>Téléverser les pages</strong>
-          <span>PDF, CBZ, ZIP, CBT ou images (jpg, png, webp). Glisse-les ici ou clique pour choisir.</span>
+          <span>PDF, CBZ, ZIP, CBT ou images. Tout est converti en WebP, plus léger pour la base. Plusieurs fichiers ici = <b>un seul</b> chapitre (un fichier par chapitre : « Plusieurs chapitres »).</span>
           <input type="file" id="chapter-files" multiple accept=".pdf,.cbz,.cbr,.zip,.cbt,.tar,image/*" hidden>
         </div>
         <div id="upload-progress" class="upload-progress hidden"><div class="bar"><i id="upload-bar"></i></div><span id="upload-label"></span></div>
@@ -122,6 +129,42 @@ href="css/chapters.css">
         <button type="submit" id="save-chapter-button" class="primary-button"><i data-lucide="save"></i><span>Enregistrer</span></button>
       </div>
     </form>
+  </div>
+</div>
+
+<div id="batch-modal" class="modal hidden">
+  <div class="modal-content batch-content">
+    <div class="modal-header">
+      <h2>Téléverser plusieurs chapitres</h2>
+      <button type="button" id="close-batch-modal" class="icon-button"><i data-lucide="x"></i></button>
+    </div>
+    <p class="batch-help">Un fichier (PDF, CBZ, ZIP, CBT) = <b>un chapitre</b>. Des images en vrac forment un seul chapitre. Le numéro est lu dans le nom du fichier : tu peux le corriger avant de lancer.</p>
+    <div class="form-grid">
+      <div class="form-group"><label for="batch-manga">Titre</label><select id="batch-manga"><option value="">Sélectionner un titre</option></select></div>
+      <div class="form-group"><label for="batch-quality">Compression</label>
+        <select id="batch-quality"><option value="normal">Équilibrée (recommandé)</option><option value="eco">Économique (le plus léger)</option><option value="hd">Haute qualité</option></select></div>
+    </div>
+    <div class="form-grid">
+      <div class="form-group"><label for="batch-status">Statut</label><select id="batch-status"><option value="published">Publié</option><option value="draft">Brouillon</option></select></div>
+      <div class="form-group"><label for="batch-visibility">Visibilité</label><select id="batch-visibility"><option value="public">Public</option><option value="hidden">Masqué</option></select></div>
+    </div>
+    <div class="form-grid">
+      <div class="form-group"><label for="batch-parallel">Chapitres envoyés en même temps</label>
+        <select id="batch-parallel"><option value="1">1 (un par un)</option><option value="2">2</option><option value="3" selected>3 (recommandé)</option><option value="4">4</option></select></div>
+      <div class="form-group batch-note"><small>Plus il y en a, plus l'envoi est rapide ; le serveur convertit 2 chapitres à la fois et met les autres en file.</small></div>
+    </div>
+    <div id="batch-dropzone" class="dropzone" tabindex="0" role="button">
+      <i data-lucide="upload-cloud"></i><strong>Choisir les fichiers des chapitres</strong>
+      <span>Sélectionne-les tous d'un coup (Ctrl / Maj) ou glisse-les ici. Ils sont envoyés en parallèle.</span>
+      <input type="file" id="batch-files" multiple accept=".pdf,.cbz,.cbr,.zip,.cbt,.tar,image/*" hidden>
+    </div>
+    <div class="batch-table-wrap"><table class="admin-table batch-table"><thead><tr><th>Fichier</th><th>N°</th><th>Taille</th><th>État</th><th></th></tr></thead>
+      <tbody id="batch-rows"><tr><td colspan="5" class="loading-row">Aucun fichier choisi.</td></tr></tbody></table></div>
+    <p id="batch-summary" class="batch-summary"></p>
+    <div class="modal-actions">
+      <button type="button" id="batch-cancel" class="secondary-button">Fermer</button>
+      <button type="button" id="batch-start" class="primary-button" disabled><i data-lucide="play"></i><span>Lancer l'import</span></button>
+    </div>
   </div>
 </div>
 
