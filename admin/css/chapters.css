@@ -1187,3 +1187,18 @@ READY FOR PRODUCTION
 .upload-error{margin-top:10px;padding:12px 14px;border-radius:14px;border:1px solid color-mix(in srgb,#ef4444 55%,transparent);background:color-mix(in srgb,#ef4444 14%,transparent);color:#ef4444;font-size:13.5px;font-weight:600;line-height:1.45}
 .upload-progress .bar i.indeterminate{width:35% !important;animation:barslide 1.1s ease-in-out infinite alternate}
 @keyframes barslide{from{margin-left:0}to{margin-left:65%}}
+
+/* upload : choix de compression + fenêtre "plusieurs chapitres" */
+.topbar-actions{display:flex;gap:10px;flex-wrap:wrap}
+.quality-row{display:flex;align-items:center;gap:10px;margin:0 0 10px;flex-wrap:wrap}
+.quality-row label{font-size:13px;font-weight:600;margin:0}
+.batch-content{max-width:860px;width:calc(100% - 24px)}
+.batch-help{margin:0 0 14px;font-size:13.5px;line-height:1.55;color:var(--text-secondary)}
+.batch-table-wrap{margin:14px 0 6px;max-height:300px;overflow:auto;border:1px solid var(--border);border-radius:14px}
+.batch-table td,.batch-table th{padding:8px 10px;font-size:13px;vertical-align:middle}
+.batch-table input[type=number]{width:78px;padding:6px 8px;font-size:13px}
+.batch-table .fname{max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block}
+.batch-state{font-weight:600}
+.batch-state.ok{color:#22c55e}.batch-state.bad{color:#ef4444}.batch-state.skip{color:#f59e0b}.batch-state.run{color:var(--primary)}
+.batch-summary{min-height:20px;margin:6px 2px 0;font-size:13px;color:var(--text-secondary)}
+.batch-note{align-self:end}.batch-note small{color:var(--text-secondary);line-height:1.45}

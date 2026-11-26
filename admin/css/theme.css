@@ -230,3 +230,20 @@ h1, h2, h3, h4, h5, p, span, a, td, th, label, small, strong, div, li, summary {
   .page-title p { font-size: 14px !important; margin-top: 6px !important; }
   .toolbar-right .secondary-button { justify-content: center; }
 }
+
+
+/* ---------- storage meter + alert ---------- */
+.storage-meter { margin-top: 12px; padding: 12px; border-radius: 16px; border: 1px solid var(--line); background: color-mix(in srgb, var(--elev) 60%, transparent); font-size: 12.5px; }
+.storage-meter[hidden] { display: none; }
+.sm-head { display: flex; justify-content: space-between; margin-bottom: 8px; color: var(--muted); font-weight: 700; letter-spacing: .06em; text-transform: uppercase; font-size: 11px; }
+.sm-head b { color: var(--text); font-size: 13px; letter-spacing: 0; }
+.sm-bar { height: 8px; border-radius: 99px; background: color-mix(in srgb, var(--muted) 25%, transparent); overflow: hidden; }
+.sm-bar i { display: block; height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--accent), var(--accent-2)); transition: width .4s; }
+.storage-meter.warn .sm-bar i { background: #f59e0b; } .storage-meter.critical .sm-bar i { background: #ef4444; }
+.storage-meter small { display: block; margin-top: 8px; color: var(--muted); line-height: 1.4; }
+.sm-clean { margin-top: 10px; width: 100%; padding: 9px 10px; border-radius: 12px; border: 1px solid var(--line); cursor: pointer; font: 700 12.5px system-ui, sans-serif;
+  background: transparent; color: var(--text); }
+.sm-clean:hover { border-color: var(--accent); color: var(--accent); } .sm-clean[disabled] { opacity: .5; }
+.storage-alert { margin: 0 0 18px; padding: 14px 18px; border-radius: 16px; line-height: 1.5; font-size: 14px; border: 1px solid; }
+.storage-alert.warn { background: color-mix(in srgb, #f59e0b 16%, transparent); border-color: color-mix(in srgb, #f59e0b 55%, transparent); }
+.storage-alert.critical { background: color-mix(in srgb, #ef4444 16%, transparent); border-color: color-mix(in srgb, #ef4444 60%, transparent); }

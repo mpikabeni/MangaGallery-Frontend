@@ -26,3 +26,15 @@
 .chip.bad{background:color-mix(in srgb,#ef4444 22%,transparent);color:#ef4444}
 .import-card .count{font-size:13px;font-weight:700;margin:0 0 10px}
 .import-card .count.loading{color:var(--text-secondary);font-weight:500}
+
+.coming-actions{margin:-6px 0 14px}
+
+/* one tab per source site */
+.source-tabs{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:0 0 18px}
+.source-tab{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:12px 14px;border:1px solid var(--border);border-radius:16px;background:var(--card);color:var(--text);cursor:pointer;text-align:left;font:inherit;transition:border-color .15s,background .15s}
+.source-tab b{font-size:14px}
+.source-tab small{font-size:11.5px;color:var(--text-secondary)}
+.source-tab:hover{border-color:var(--primary)}
+.source-tab.active{border-color:var(--primary);background:color-mix(in srgb,var(--primary) 14%,var(--card))}
+.source-tab:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+@media(max-width:520px){.source-tabs{grid-template-columns:repeat(2,1fr)}}
