@@ -5,7 +5,15 @@ const TYPE_LABELS = { manga: "Manga", webtoon: "Webtoon", comic: "Bande dessiné
 const TYPES = { normal: ["manga", "webtoon", "comic"], sainte_culture: ["webtoon", "comic"] };
 const STATUS = { ongoing: "En cours", completed: "Terminé", paused: "En pause" };
 const SYN = { vf: "synopsis VF", auto: "synopsis traduit automatiquement", en: "synopsis en anglais", none: "sans synopsis" };
-const state = { section: "normal", offset: 0, total: 0, busy: false, token: 0, queue: [], running: false, auto: 0 };
+const state = { source: "mangadex", section: "normal", offset: 0, hasMore: false, total: 0, busy: false, token: 0, queue: [], running: false, auto: 0 };
+const SOURCES = {
+  mangadex: { label: "MangaDex", site: "https://mangadex.org", text: "Fiche, couverture et chapitres. Les pages sont chargées depuis MangaDex à chaque lecture (rien n'est copié sur ton serveur). MangaDex et les groupes de traduction sont crédités dans l'application. Pas de publicité ni d'abonnement payant." },
+  anilist: { label: "AniList", site: "https://anilist.co", text: "Catalogue très complet (manga, manhwa, manhua) avec filtre adulte. Importe la fiche : couverture, synopsis (traduit automatiquement en français), genres. Aucun chapitre : ajoute-les ensuite en PDF ou CBZ dans Chapitres." },
+  jikan: { label: "MyAnimeList (Jikan)", site: "https://myanimelist.net", text: "Le plus grand catalogue, via l'API gratuite Jikan (limitée à ~3 requêtes par seconde : la recherche adulte prend un peu plus de temps). Importe la fiche uniquement, sans chapitres." },
+  kitsu: { label: "Kitsu", site: "https://kitsu.app", text: "Catalogue communautaire. Kitsu n'a pas de filtre adulte pour les mangas : on lit son indicateur NSFW, la section adulte peut donc contenir peu de résultats. Importe la fiche uniquement." },
+  mangaupdates: { label: "MangaUpdates", site: "https://www.mangaupdates.com", text: "Très bonne couverture des manhwa et webtoons, avec genres détaillés. Importe la fiche uniquement, sans chapitres." },
+};
+const isCat = () => state.source !== "mangadex";
 const MIN_VISIBLE = 8;          // keep loading the next results until at least this many valid titles are shown
 const $ = (id) => document.getElementById(id);
 const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
@@ -18,6 +26,14 @@ async function initializeImportPage() {
     document.querySelectorAll("#section-tabs .tab").forEach((t) => t.classList.toggle("active", t === b));
     search(true);
   });
+  $("source-tabs").addEventListener("click", (e) => {
+    const b = e.target.closest("button[data-source]"); if (!b || b.dataset.source === state.source) return;
+    state.source = b.dataset.source;
+    document.querySelectorAll("#source-tabs .source-tab").forEach((t) => t.classList.toggle("active", t === b));
+    applySource(); search(true);
+  });
+  $("format").addEventListener("change", () => search(true));
+  applySource();
   $("go").addEventListener("click", () => search(true));
   $("q").addEventListener("keydown", (e) => { if (e.key === "Enter") search(true); });
   ["lang", "only-completed", "coming-mode"].forEach((id) => $(id).addEventListener("change", () => search(true)));
@@ -34,13 +50,14 @@ async function initializeImportPage() {
 }
 
 async function search(reset) {
-  if (state.busy) return;
+  if (state.busy) { if (reset) state.again = true; return; }      // a tab was changed during a search: redo it right after
   state.busy = true;
   const box = $("results"), more = $("more");
-  if (reset) { state.token++; state.queue = []; state.offset = 0; state.auto = 0; box.replaceChildren(note("Recherche sur MangaDex…")); more.classList.add("hidden"); }
+  if (reset) { state.token++; state.queue = []; state.offset = 0; state.auto = 0; box.replaceChildren(note("Recherche sur " + SOURCES[state.source].label + "…")); more.classList.add("hidden"); $("hidden-note").classList.add("hidden"); }
   try {
+    if (isCat()) { await catalogSearch(reset, box, more); return; }
     const r = await api.get("/api/mangadex/search", { q: $("q").value.trim(), section: state.section, lang: $("lang").value,
-      offset: state.offset, completed: $("only-completed").checked ? 1 : 0, coming: $("coming-mode").checked ? 1 : 0 });
+      offset: state.offset, format: $("format").value, completed: $("only-completed").checked ? 1 : 0, coming: $("coming-mode").checked ? 1 : 0 });
     if (reset) box.replaceChildren();
     if (!r.items.length && reset) box.replaceChildren(note("Aucun résultat. Essaie un autre titre, une autre langue, ou décoche « terminées »."));
     r.items.forEach((it) => box.append(card(it)));
@@ -49,7 +66,20 @@ async function search(reset) {
     if (window.lucide) window.lucide.createIcons();
     pump();
   } catch (e) { console.error(e); if (reset) box.replaceChildren(note("Recherche impossible.")); showError(e.message || "Recherche impossible."); }
-  finally { state.busy = false; }
+  finally { state.busy = false; if (state.again) { state.again = false; search(true); } }
+}
+
+/* Show only the options that make sense for the selected site, and its own credit text. */
+function applySource() {
+  const cat = isCat();
+  document.querySelectorAll(".mdx-only").forEach((n) => n.classList.toggle("hidden", cat));
+  document.querySelectorAll(".cat-only").forEach((n) => n.classList.toggle("hidden", !cat));
+  const src = SOURCES[state.source], box = $("notice");
+  const a = el("a", null, src.label); a.href = src.site; a.target = "_blank"; a.rel = "noopener noreferrer";
+  const strong = el("strong"); strong.append("Source : ", a, ". ");
+  const tail = el("span", null, src.text + (cat ? " " : " Pour répondre à la demande de retrait d'un groupe, supprime le titre dans "));
+  if (cat) { box.replaceChildren(strong, tail); return; }
+  const m = el("a", null, "Mangas"); m.href = "mangas.html"; box.replaceChildren(strong, tail, m, ".");
 }
 
 function note(text) { const d = el("div", "import-empty", text); return d; }
@@ -75,6 +105,7 @@ function applyFilters() {
   const needComplete = $("only-complete").checked && !$("coming-mode").checked;
   let hidden = 0, pending = 0;
   document.querySelectorAll(".import-card").forEach((c) => {
+    if (!c._mdx) return;
     const info = c._info;
     if (!info && !c._failed) { c.classList.add("hidden"); pending++; return; }      // not counted yet
     // normal mode: only complete titles with chapters.  "Bientôt" mode: only titles that are NOT complete yet (complete ones are imported normally)
@@ -90,7 +121,7 @@ function applyFilters() {
 }
 
 function card(it) {
-  const c = el("article", "import-card hidden");     // hidden until the chapters are counted: no title with 0 chapters is ever shown
+  const c = el("article", "import-card hidden"); c._mdx = true;     // hidden until the chapters are counted: no title with 0 chapters is ever shown
   const comingMode = $("coming-mode").checked;
   c._coming = comingMode;
   const img = el("img", "cov"); img.alt = ""; img.loading = "lazy"; img.referrerPolicy = "no-referrer";
@@ -146,5 +177,56 @@ function card(it) {
     } catch (e) { console.error(e); showError(e.message || "Import impossible."); btn.disabled = false; sel.disabled = false; btn.textContent = "Réessayer"; }
   });
   info.append(title, meta, chips, desc, count, row); c.append(img, info);
+  return c;
+}
+
+/* ---- the 4 metadata sites: no chapter counting, the card is shown right away */
+async function catalogSearch(reset, box, more) {
+  const r = await api.get("/api/catalog/search", { source: state.source, q: $("q").value.trim(), section: state.section,
+    format: $("format").value, offset: state.offset });
+  if (reset) box.replaceChildren();
+  if (!r.items.length && reset) box.replaceChildren(note("Aucun résultat sur ce site. Essaie un autre titre, une autre origine, ou un autre site."));
+  r.items.forEach((it) => box.append(catalogCard(it)));
+  state.offset = r.next; state.hasMore = !!r.has_more;
+  more.classList.toggle("hidden", !state.hasMore);
+  if (window.lucide) window.lucide.createIcons();
+  if (state.hasMore && !r.items.length) setTimeout(() => search(false), 0);     // a filtered page was empty: read the next one
+}
+
+function catalogCard(it) {
+  const c = el("article", "import-card");
+  const img = el("img", "cov"); img.alt = ""; img.loading = "lazy"; img.referrerPolicy = "no-referrer";
+  if (it.cover_url) img.src = it.cover_url;
+  const info = el("div");
+  const title = el("h3", null, it.title);
+  if (it.rating === "adult") title.append(el("span", "badge18", "18+"));
+  const meta = el("div", "meta", [it.year, (it.genres || []).slice(0, 3).join(", ")].filter(Boolean).join(" · "));
+  const chips = el("div", "chips");
+  chips.append(el("span", "chip" + (it.status === "completed" ? " ok" : ""), STATUS[it.status] || it.status));
+  chips.append(el("span", "chip warn", "Fiche seulement · sans chapitres"));
+  if (it.same_title) chips.append(el("span", "chip bad", "Même titre déjà dans ton catalogue"));
+  const desc = el("p", "desc", it.description || "Pas de description.");
+  const allowed = TYPES[state.section];
+  const sel = el("select");
+  allowed.forEach((t) => { const o = el("option", null, TYPE_LABELS[t]); o.value = t; sel.append(o); });
+  sel.value = allowed.includes(it.type_guess) ? it.type_guess : allowed[0];
+  const btn = el("button", "primary-button", "Importer la fiche"); btn.type = "button";
+  const row = el("div", "row"); row.append(sel, btn);
+  const done = (msg, mangaId) => {
+    const a = el("a", "secondary-button", "Ajouter des chapitres"); a.href = `chapters.html?manga=${mangaId}`;
+    row.replaceChildren(el("span", "meta", msg), a);
+  };
+  if (it.imported_id) { btn.disabled = true; btn.textContent = "Déjà importé"; }
+  const source = state.source, section = state.section;
+  btn.addEventListener("click", async () => {
+    btn.disabled = true; sel.disabled = true; btn.textContent = "Import en cours…";
+    try {
+      const r = await api.post("/api/catalog/import", { source, id: it.id, section, content_type: sel.value, lang: "fr", visibility: $("visibility").value });
+      const msg = `Fiche importée · ${SYN[r.synopsis] || ""}${r.cover ? "" : " · sans couverture"} · ${r.visibility === "hidden" ? "masquée (brouillon)" : "dans « Bientôt »"}`;
+      showSuccess(`${it.title} : ${msg}.`);
+      done(msg, r.manga.id);
+    } catch (e) { console.error(e); showError(e.message || "Import impossible."); btn.disabled = false; sel.disabled = false; btn.textContent = "Réessayer"; }
+  });
+  info.append(title, meta, chips, desc, row); c.append(img, info);
   return c;
 }

@@ -9,6 +9,7 @@ const pageLines = () => $("chapter-pages").value.split(/\r?\n/).map((l) => l.tri
 let pageUrls = [];                      // pages already stored (uploaded files or existing chapter), in reading order
 const unsaved = new Set();              // uploaded in this modal session, not saved yet
 const discard = (urls) => { urls = [...urls]; if (urls.length) api.post("/api/uploads/discard", { urls }).catch(() => {}); };
+const mo = (b) => (b / 1048576).toFixed(1).replace(".", ",") + " Mo";
 const cell = (tr, content) => { const td = document.createElement("td"); if (content instanceof Node) td.append(content); else td.textContent = content == null ? "" : String(content); tr.append(td); return td; };
 
 async function initializeChaptersPage() {
@@ -36,6 +37,7 @@ function bindEvents() {
   ["dragleave", "drop"].forEach((t) => zone.addEventListener(t, (e) => { e.preventDefault(); zone.classList.remove("over"); }));
   zone.addEventListener("drop", (e) => uploadFiles(e.dataTransfer.files));
   input.addEventListener("change", () => { uploadFiles(input.files); input.value = ""; });
+  bindBatch();
   $("previous-page").addEventListener("click", () => { if (chapterState.page > 1) { chapterState.page--; loadChapters(); } });
   $("next-page").addEventListener("click", () => { if (chapterState.page < chapterState.totalPages) { chapterState.page++; loadChapters(); } });
 }
@@ -47,7 +49,8 @@ async function loadMangas() {
     chapterState.mangas = all;
     const opts = all.map((m) => { const o = document.createElement("option"); o.value = m.id; o.textContent = mangaLabel(m); return o; });
     $("manga-filter").replaceChildren(new Option("Tous les titres", ""), ...opts.map((o) => o.cloneNode(true)));
-    $("chapter-manga").replaceChildren(new Option("Sélectionner un titre", ""), ...opts);
+    $("chapter-manga").replaceChildren(new Option("Sélectionner un titre", ""), ...opts.map((o) => o.cloneNode(true)));
+    $("batch-manga").replaceChildren(new Option("Sélectionner un titre", ""), ...opts);
   } catch (e) { console.error(e); showError(e.message || "Impossible de charger les titres."); }
 }
 
@@ -102,7 +105,7 @@ async function uploadFiles(fileList) {
   if (!files.length) return;
   const bar = $("upload-bar"), box = $("upload-progress"), label = $("upload-label"), zone = $("dropzone");
   const size = files.reduce((n, f) => n + f.size, 0);
-  const fd = new FormData(); files.forEach((f) => fd.append("files", f));
+  const fd = new FormData(); files.forEach((f) => fd.append("files", f)); fd.append("quality", $("chapter-quality").value);
   uploadError("");
   box.classList.remove("hidden"); zone.classList.add("busy"); bar.classList.remove("indeterminate"); bar.style.width = "0%";
   label.textContent = `Envoi de ${files.length} fichier(s) · ${(size / 1048576).toFixed(1)} Mo…`;
@@ -121,7 +124,7 @@ async function uploadFiles(fileList) {
       if (job.status === "done") {
         pageUrls = pageUrls.concat(job.pages); job.pages.forEach((u) => unsaved.add(u));
         renderPreview();
-        showSuccess(`${job.count} page(s) ajoutée(s).` + (job.skipped && job.skipped.length ? ` ${job.skipped.length} ignorée(s).` : ""));
+        showSuccess(`${job.count} page(s) ajoutée(s) · ${mo(size)} envoyés → ${mo(job.bytes || 0)} stockés.` + (job.skipped && job.skipped.length ? ` ${job.skipped.length} ignorée(s).` : ""));
         break;
       }
       if (job.status === "error") throw new Error(job.error || "Le traitement a échoué.");
@@ -219,4 +222,179 @@ async function deleteChapter(id) {
   if (!confirm("Supprimer ce chapitre ?")) return;
   try { await api.delete(`/api/chapters/${id}`); showSuccess("Chapitre supprimé."); await loadChapters(); }
   catch (e) { console.error(e); showError(e.message || "Impossible de supprimer."); }
+}
+
+
+/* ================= Plusieurs chapitres : un fichier (PDF, CBZ, ZIP, CBT) = un chapitre, envoyés un par un ================= */
+const batch = { rows: [], existing: new Map(), running: false, stop: false };
+const retry = (r) => r.state === "wait" || r.state === "bad";      // a failed file can be sent again
+const IMG_RE = /\.(jpe?g|png|webp|gif|bmp)$/i;
+const NUM_RE = /(?:^|[^a-zà-ÿ])(?:chapitres?|chapters?|chap|ch|episodes?|ep|c|#)[\s._-]*0*(\d+(?:[.,]\d+)?)/i;
+
+function guessNumber(name) {
+  const base = name.replace(/\.[^.]+$/, "");
+  let m = base.match(NUM_RE);
+  if (!m) { const all = [...base.matchAll(/(\d+(?:[.,]\d+)?)/g)]; m = all.length ? all[all.length - 1] : null; }
+  if (!m) return null;
+  const n = Number(m[1].replace(",", "."));
+  return n > 0 && n < 100000 ? n : null;
+}
+
+async function existingNumbers(mangaId) {
+  if (!mangaId) return new Set();
+  if (batch.existing.has(mangaId)) return batch.existing.get(mangaId);
+  const set = new Set();
+  try {
+    let page = 1, pages = 1;
+    do { const r = await api.get("/api/chapters", { page, limit: 100, manga_id: mangaId, order: "asc" }); (r.items || []).forEach((c) => set.add(Number(c.number))); pages = r.total_pages || 1; page++; } while (page <= pages && page <= 30);
+  } catch (e) { console.error(e); }        // the server still refuses a duplicate number: this only saves a useless upload
+  batch.existing.set(mangaId, set);
+  return set;
+}
+
+function bindBatch() {
+  const zone = $("batch-dropzone"), input = $("batch-files");
+  $("add-batch").addEventListener("click", openBatch);
+  $("close-batch-modal").addEventListener("click", closeBatch);
+  $("batch-cancel").addEventListener("click", closeBatch);
+  $("batch-start").addEventListener("click", runBatch);
+  $("batch-manga").addEventListener("change", async () => { await refreshBatch(true); });
+  zone.addEventListener("click", () => { if (!batch.running) input.click(); });
+  zone.addEventListener("keydown", (e) => { if ((e.key === "Enter" || e.key === " ") && !batch.running) { e.preventDefault(); input.click(); } });
+  ["dragenter", "dragover"].forEach((t) => zone.addEventListener(t, (e) => { e.preventDefault(); zone.classList.add("over"); }));
+  ["dragleave", "drop"].forEach((t) => zone.addEventListener(t, (e) => { e.preventDefault(); zone.classList.remove("over"); }));
+  zone.addEventListener("drop", (e) => { if (!batch.running) addBatchFiles(e.dataTransfer.files); });
+  input.addEventListener("change", () => { addBatchFiles(input.files); input.value = ""; });
+}
+
+function openBatch() {
+  batch.rows = []; batch.running = false; batch.stop = false;
+  if (chapterState.manga) $("batch-manga").value = chapterState.manga;
+  $("batch-summary").textContent = "";
+  $("batch-modal").classList.remove("hidden"); renderBatch();
+  if (window.lucide) window.lucide.createIcons();
+}
+function closeBatch() {
+  if (batch.running && !confirm("Un import est en cours. L'arrêter après le fichier en cours ?")) return;
+  if (batch.running) { batch.stop = true; return; }
+  $("batch-modal").classList.add("hidden");
+}
+
+async function addBatchFiles(list) {
+  const files = [...(list || [])].sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
+  const images = files.filter((f) => IMG_RE.test(f.name)), docs = files.filter((f) => !IMG_RE.test(f.name));
+  docs.forEach((f) => batch.rows.push({ files: [f], name: f.name, size: f.size, num: guessNumber(f.name), state: "wait", msg: "" }));
+  if (images.length) batch.rows.push({ files: images, name: `${images.length} image(s) : ${images[0].name}…`, size: images.reduce((n, f) => n + f.size, 0), num: guessNumber(images[0].name), state: "wait", msg: "" });
+  await refreshBatch(false);
+}
+
+/* Missing numbers continue after the previous one (or after the last existing chapter), then conflicts are flagged. */
+async function refreshBatch(clearAuto) {
+  const mangaId = Number($("batch-manga").value) || 0;
+  const have = await existingNumbers(mangaId);
+  if (clearAuto) batch.rows.forEach((r) => { if (r.auto) r.num = null; });
+  let prev = have.size ? Math.max(...have) : 0;
+  batch.rows.forEach((r) => {
+    if (r.state === "ok") { prev = Math.max(prev, r.num || 0); return; }
+    if (r.num == null) { r.num = Math.floor(prev) + 1; r.auto = true; }
+    prev = r.num;
+  });
+  renderBatch();
+}
+
+function batchProblem(r, have) {
+  if (!(r.num > 0)) return "numéro invalide";
+  if (have.has(r.num)) return "existe déjà";
+  if (batch.rows.some((o) => o !== r && o.state !== "ok" && o.num === r.num && batch.rows.indexOf(o) < batch.rows.indexOf(r))) return "numéro en double";
+  return "";
+}
+
+function renderBatch() {
+  const body = $("batch-rows"), have = batch.existing.get(Number($("batch-manga").value) || 0) || new Set();
+  body.replaceChildren();
+  if (!batch.rows.length) { const tr = document.createElement("tr"), td = cell(tr, "Aucun fichier choisi."); td.colSpan = 5; td.className = "loading-row"; body.append(tr); }
+  batch.rows.forEach((r, i) => {
+    const tr = document.createElement("tr");
+    const name = document.createElement("span"); name.className = "fname"; name.textContent = r.name; name.title = r.name; cell(tr, name);
+    const inp = document.createElement("input"); inp.type = "number"; inp.min = "0.5"; inp.step = "0.5"; inp.value = r.num == null ? "" : r.num;
+    inp.disabled = batch.running || r.state === "ok";
+    inp.addEventListener("change", () => { r.num = inp.value === "" ? null : Number(inp.value); r.auto = false; if (r.state === "skip" || r.state === "bad") { r.state = "wait"; r.msg = ""; } renderBatch(); });
+    cell(tr, inp);
+    cell(tr, mo(r.size));
+    const st = document.createElement("span"); st.className = "batch-state";
+    const problem = retry(r) ? batchProblem(r, have) : "";
+    if (problem) { st.classList.add("skip"); st.textContent = "Ignoré : " + problem; }
+    else { st.classList.add({ ok: "ok", bad: "bad", skip: "skip", run: "run" }[r.state] || ""); st.textContent = r.msg || (r.state === "wait" ? "En attente" : ""); }
+    r._state = st; cell(tr, st);
+    const rm = document.createElement("button"); rm.type = "button"; rm.className = "action-button delete"; rm.title = "Retirer"; rm.textContent = "✕"; rm.disabled = batch.running;
+    rm.addEventListener("click", () => { batch.rows.splice(i, 1); renderBatch(); });
+    cell(tr, rm); body.append(tr);
+  });
+  const ready = batch.rows.filter((r) => retry(r) && !batchProblem(r, have)).length;
+  $("batch-start").disabled = batch.running || !ready || !$("batch-manga").value;
+  $("batch-start").querySelector("span").textContent = ready ? `Lancer l'import (${ready} chapitre${ready > 1 ? "s" : ""})` : "Lancer l'import";
+}
+
+function setRow(r, state, msg) { r.state = state; r.msg = msg; if (r._state) { r._state.textContent = msg; r._state.className = "batch-state " + ({ ok: "ok", bad: "bad", skip: "skip", run: "run" }[state] || ""); } }
+
+async function waitJob(jobId, onTick) {
+  let fails = 0, last = -1, lastMove = Date.now();
+  for (;;) {
+    await sleep(1500);
+    let job;
+    try { job = await api.get(`/api/uploads/jobs/${jobId}`); fails = 0; }
+    catch (e) { if (++fails >= 6) throw new Error("Le serveur ne répond plus. Réessaie dans un instant."); continue; }
+    if (job.status === "done") return job;
+    if (job.status === "error") throw new Error(job.error || "Le traitement a échoué.");
+    if (job.done !== last) { last = job.done; lastMove = Date.now(); }
+    onTick(job.done);
+    if (Date.now() - lastMove > 10 * 60 * 1000) throw new Error("Le traitement est trop long. Réessaie avec un fichier plus léger.");
+  }
+}
+
+async function runBatch() {
+  const mangaId = Number($("batch-manga").value);
+  if (!mangaId) return showError("Choisis un titre.");
+  const quality = $("batch-quality").value, status = $("batch-status").value, visibility = $("batch-visibility").value;
+  const have = await existingNumbers(mangaId);
+  batch.running = true; batch.stop = false; renderBatch();
+  const stats = { ok: 0, bad: 0, skip: 0, sent: 0, stored: 0 };
+  let lastId = null;
+  const parallel = Math.min(4, Math.max(1, Number($("batch-parallel").value) || 1));
+  const queue = batch.rows.filter(retry);
+
+  // One chapter = upload + server conversion + creation. `parallel` of them run AT THE SAME TIME; each worker takes the next waiting file.
+  async function process(r) {
+    const problem = batchProblem(r, have);
+    if (problem) { setRow(r, "skip", "Ignoré : " + problem); stats.skip++; return; }
+    setRow(r, "run", "Envoi…");
+    let pages = [], created = false;
+    try {
+      const fd = new FormData(); r.files.forEach((f) => fd.append("files", f)); fd.append("quality", quality);
+      const start = await api.upload("/api/uploads/chapter", fd, (p) => setRow(r, "run", p < 1 ? `Envoi ${Math.round(p * 100)} %` : "Conversion…"));
+      const job = await waitJob(start.job_id, (n) => setRow(r, "run", n ? `Conversion… ${n} page(s)` : "Conversion…"));
+      pages = job.pages || [];
+      const res = await api.post("/api/chapters", { manga_id: mangaId, number: r.num, status, visibility, pages, announce: false });
+      created = true; lastId = res.chapter && res.chapter.id || lastId; have.add(r.num);
+      stats.ok++; stats.sent += r.size; stats.stored += job.bytes || 0;
+      setRow(r, "ok", `✓ ${job.count} page(s) · ${mo(job.bytes || 0)}`);
+    } catch (e) {
+      console.error(e);
+      if (pages.length && !created) discard(pages);           // converted but the chapter was not created: free the images
+      stats.bad++; setRow(r, "bad", e.message || "Échec");
+      if (/stockage presque plein/i.test(e.message || "")) { batch.stop = true; showError(e.message); }
+    }
+  }
+  const worker = async () => { while (!batch.stop && queue.length) await process(queue.shift()); };
+  await Promise.all(Array.from({ length: Math.min(parallel, queue.length) }, worker));
+  if (lastId && status === "published") { try { await api.put(`/api/chapters/${lastId}`, { status }); } catch (_) {} }   // announces the title once, with all its chapters
+  batch.running = false; renderBatch();
+  const parts = [`${stats.ok} chapitre(s) ajouté(s)`];
+  if (stats.ok) parts.push(`${mo(stats.sent)} envoyés → ${mo(stats.stored)} stockés`);
+  if (stats.skip) parts.push(`${stats.skip} ignoré(s)`);
+  if (stats.bad) parts.push(`${stats.bad} en échec (relance : ils restent dans la liste)`);
+  if (batch.stop && batch.rows.some(retry)) parts.push("arrêté avant la fin");
+  $("batch-summary").textContent = parts.join(" · ");
+  (stats.bad ? showError : showSuccess)(parts.join(" · ") + ".");
+  await loadChapters();
 }

@@ -34,9 +34,57 @@
           el("div", { class: "admin-info" }, el("h4", { id: "sidebarName", text: (user && (user.name || user.username)) || "Admin" }), el("p", { id: "sidebarRole", text: "Administrateur" })),
           logout),
         el("a", { href: "../index.html#/", class: "menu-item back-to-app", style: "margin-top:8px" }, icon("arrow-left"), el("span", { text: "Retour à l'application" })),
-        window.buildThemePicker ? window.buildThemePicker() : null));
+        window.buildThemePicker ? window.buildThemePicker() : null,
+        el("div", { class: "storage-meter", id: "storage-meter" })));
     buildMobileBar(version);
+    loadStorage();
   };
+
+  /* ---- storage meter: database size vs capacity, alert from 80 %, cleanup of unused images ---- */
+  const mb = (b) => (b / 1048576 >= 1000 ? (b / 1073741824).toFixed(2).replace(".", ",") + " Go" : Math.round(b / 1048576) + " Mo");
+  async function loadStorage(force) {
+    const box = document.getElementById("storage-meter");
+    if (!box || !window.api) return;
+    let u = null;
+    try {
+      const cached = JSON.parse(sessionStorage.getItem("mgfr_storage") || "null");
+      if (!force && cached && Date.now() - cached.t < 60000) u = cached.u;
+    } catch (_) {}
+    if (!u) {
+      try { u = await window.api.get("/api/uploads/usage"); sessionStorage.setItem("mgfr_storage", JSON.stringify({ t: Date.now(), u })); }
+      catch (_) { box.hidden = true; return; }
+    }
+    renderStorage(box, u);
+  }
+  function renderStorage(box, u) {
+    box.hidden = false;
+    box.className = "storage-meter " + u.level;
+    const cleanBtn = el("button", { type: "button", class: "sm-clean", text: "Nettoyer les images inutilisées" });
+    cleanBtn.addEventListener("click", async () => {
+      if (!confirm("Supprimer les images téléversées qui ne servent à aucun titre ni chapitre (envois annulés, anciennes couvertures) ?")) return;
+      cleanBtn.disabled = true;
+      try {
+        const r = await window.api.post("/api/uploads/cleanup", {});
+        window.showSuccess && window.showSuccess(r.deleted ? `${r.deleted} image(s) supprimée(s) · ${mb(r.freed_bytes)} libérés.` : "Rien à nettoyer : toutes les images sont utilisées.");
+        sessionStorage.removeItem("mgfr_storage"); loadStorage(true);
+      } catch (err) { window.showError && window.showError(err.message || "Nettoyage impossible."); cleanBtn.disabled = false; }
+    });
+    const left = u.chapters_left != null ? ` · ≈ ${u.chapters_left} chapitres téléversables` : "";
+    box.replaceChildren(
+      el("div", { class: "sm-head" }, el("span", { text: "Stockage" }), el("b", { text: `${u.percent.toFixed(0)} %` })),
+      el("div", { class: "sm-bar" }, el("i", { style: `width:${Math.min(100, u.percent)}%` })),
+      el("small", { text: `${mb(u.used_bytes)} / ${mb(u.capacity_bytes)}${left}` }),
+      cleanBtn);
+    document.querySelector(".storage-alert")?.remove();
+    if (u.level !== "ok") {
+      const main = document.querySelector("main.main-content");
+      if (main) main.prepend(el("div", { class: "storage-alert " + u.level, role: "alert" },
+        el("b", { text: u.level === "critical" ? "⛔ Stockage presque plein" : "⚠ Stockage à " + u.percent.toFixed(0) + " %" }),
+        el("span", { text: u.level === "critical"
+          ? " : les envois seront refusés à 97 %. Nettoie les images inutilisées, supprime d'anciens chapitres ou passe à une base plus grande."
+          : " : privilégie l'import MangaDex (il ne stocke pas les pages) et nettoie régulièrement les images inutilisées." })));
+    }
+  }
 
   /* Phones / tablets: a fixed top bar (Menu + back to the app) and the sidebar becomes a drawer, so EVERY button stays reachable. */
   function buildMobileBar(version) {
