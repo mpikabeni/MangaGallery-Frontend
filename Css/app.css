@@ -381,3 +381,39 @@ textarea { resize: none; min-height: 78px; }
   background: color-mix(in srgb, var(--accent) 9%, transparent); line-height: 1.5; }
 .soon-box b { display: block; font-size: 16px; margin-bottom: 6px; }
 .soon-box p { margin: 0; color: var(--muted); font-size: 14px; }
+
+
+/* ---------- ratings & ranking ---------- */
+.cover .rate-chip { position: absolute; left: 8px; bottom: 8px; display: inline-flex; align-items: center; gap: 3px; font-size: 11px; font-weight: 800; padding: 3px 8px 3px 6px; border-radius: 999px;
+  background: rgba(10,10,20,.72); color: #ffd166; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); box-shadow: 0 4px 12px rgba(0,0,0,.35); }
+.cover .rate-chip svg.i { width: 11px; height: 11px; }
+.item .thumb .rate-chip { display: none; }
+.tag.rate-tag { display: inline-flex; align-items: center; gap: 4px; color: #ffd166; }
+.tag.rate-tag svg.i { width: 13px; height: 13px; }
+
+.stars { display: flex; gap: 4px; justify-content: center; }
+.star { padding: 4px; border-radius: 12px; color: var(--muted); transition: transform .25s var(--spring), color .2s; }
+.star svg.i { width: 32px; height: 32px; stroke-width: 1.6; }
+.star.on { color: #ffd166; }
+.star.on svg.i { filter: drop-shadow(0 0 8px rgba(255,209,102,.45)); }
+.star:active { transform: scale(1.25); }
+.rate-box { display: grid; gap: 10px; justify-items: center; text-align: center; padding: 16px 14px; border-radius: 20px;
+  background: color-mix(in srgb, var(--surface) 78%, transparent); border: 1px solid var(--line); }
+.rate-box .rate-txt { display: grid; gap: 2px; }
+.rate-box .rate-txt b { font-size: 15px; font-weight: 800; }
+.rate-box .rate-txt span { font-size: 12.5px; color: var(--muted); }
+.rate-box.compact { width: min(100%, 340px); background: rgba(255,255,255,.06); }
+.reader-end .rate-box { color: #f3f4fa; }
+.reader-end .rate-box .rate-txt span { color: #aeb3c8; }
+
+.rank-list { display: grid; gap: 10px; }
+.item.rank { padding-left: 10px; }
+.item.rank .rk { flex: none; width: 26px; text-align: center; font-size: 20px; font-weight: 900; letter-spacing: -.02em; color: var(--muted); }
+.item.rank.r1 .rk { color: #ffd166; font-size: 24px; }
+.item.rank.r2 .rk { color: #c9ced9; font-size: 23px; }
+.item.rank.r3 .rk { color: #e0955a; font-size: 22px; }
+.item.rank .score { flex: none; display: grid; justify-items: end; gap: 0; }
+.item.rank .score .sc-line { display: inline-flex; align-items: center; gap: 4px; color: #ffd166; }
+.item.rank .score .sc-line svg.i { width: 16px; height: 16px; }
+.item.rank .score .sc-line b { font-size: 16px; font-weight: 800; color: var(--text); }
+.item.rank .score small { font-size: 11px; color: var(--muted); }
