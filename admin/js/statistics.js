@@ -486,10 +486,14 @@ const StatisticsModule = (() => {
 
             categories:
                 Array.isArray(
-                    source.categories
+                    source.top_categories
                 )
-                    ? source.categories
-                    : [],
+                    ? source.top_categories
+                    : Array.isArray(
+                        source.categories
+                    )
+                        ? source.categories
+                        : [],
 
             recentActivity:
                 Array.isArray(

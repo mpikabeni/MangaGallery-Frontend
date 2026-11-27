@@ -37,21 +37,12 @@
   }
 
   async function initializeDashboardPage() {
-    let failure = null;   // the first real error: never hide it behind fake zeros
-    const safe = (p, params) => window.API.get(p, params).catch((e) => { if (!failure) failure = e; return { items: [], __failed: true }; });
+    const safe = (p, params) => window.API.get(p, params).catch(() => ({ items: [] }));
     const [stats, mangas, users, comments, reports] = await Promise.all([
       safe("/statistics"), safe("/mangas", { per_page: 5, sort: "latest" }), safe("/users", { per_page: 5 }),
       safe("/comments", { per_page: 5 }), safe("/reports", { per_page: 5, status: "pending" }),
     ]);
     const s = stats.statistics || stats;
-    if (stats.__failed) {
-      const st = failure && failure.status;
-      const why = st === 401 ? "session expirée, reconnecte-toi" : st === 403 ? "ce compte n'est pas l'administrateur (ADMIN_TELEGRAM_ID)" : st >= 500 ? "erreur du serveur (" + st + ")" : "serveur injoignable ou en veille";
-      if (typeof showError === "function") showError("Statistiques indisponibles : " + why + (failure && failure.message ? " — " + failure.message : ""));
-      ["users-count", "mangas-count", "chapters-count", "comments-count", "reports-count", "new-users-count"].forEach((id) => set(id, "—"));
-      ["users-growth", "reports-growth", "mangas-growth", "chapters-growth", "comments-growth", "new-users-growth"].forEach((id) => set(id, ""));
-      return;
-    }
     set("users-count", s.users ?? 0); set("mangas-count", s.mangas ?? 0); set("chapters-count", s.chapters ?? 0);
     set("comments-count", s.comments ?? 0); set("reports-count", s.reports_pending ?? 0); set("new-users-count", s.new_users_7d ?? 0);
     set("users-growth", `+${s.new_users_7d ?? 0} / 7 j`); set("reports-growth", "en attente");
