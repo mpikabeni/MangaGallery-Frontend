@@ -321,8 +321,8 @@
       readCount ? h("div", { style: "margin-top:12px" }, h("div", { class: "progress" }, h("i", { style: `width:${Math.max(5, Math.round((readCount / chapters.length) * 100))}%` })),
         h("small", { class: "muted", text: T("read_progress", { a: readCount, b: chapters.length }) })) : null,
       h("section", { class: "section" }, descEl, more,
-        m.source === "mangadex" && m.source_url ? h("small", { class: "credit" }, T("credit_source") + " ",
-          h("a", { href: m.source_url, onclick: (e) => { e.preventDefault(); openLink(m.source_url); }, text: "MangaDex" })) : null),
+        m.source_url ? h("small", { class: "credit" }, T(m.source === "mangadex" || m.source === "internetarchive" ? "credit_source" : "credit_fiche") + " ",
+          h("a", { href: m.source_url, onclick: (e) => { e.preventDefault(); openLink(m.source_url); }, text: m.source_label || "MangaDex" })) : null),
       soon ? h("section", { class: "soon-box" }, h("b", { text: "🕒 " + T("soon_title_box") }), h("p", { text: T("soon_body") }))
            : h("section", { class: "section" }, tabs, h("div", { style: "margin-top:14px" }, chapPanel, comPanel)),
     ];

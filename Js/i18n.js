@@ -59,7 +59,7 @@
       soon: "Bientôt", soon_title: "Bientôt disponibles", soon_available: "Bientôt disponible", soon_title_box: "Bientôt disponible en français",
       soon_body: "Les chapitres arrivent dès que la série est complète en VF. Ajoute-la à tes favoris avec le cœur : tu seras prévenu dès sa sortie.",
       soon_alert_on: "Tu seras prévenu à sa sortie", soon_alert_off: "Alerte retirée",
-      chapters_range: "Chapitres {a} → {b}", credit_source: "Fiche et chapitres fournis par", credit_chapter: "Chapitre fourni par MangaDex · Traduction : {g}.",
+      chapters_range: "Chapitres {a} → {b}", credit_source: "Fiche et chapitres fournis par", credit_fiche: "Fiche fournie par", credit_chapter: "Chapitre fourni par MangaDex · Traduction : {g}.",
       list_title: "Toutes les séries", tagline_home: "Lis. Découvre. Partage.", no_comments_yet: "Aucun commentaire pour le moment",
     },
     en: {
@@ -119,7 +119,7 @@
       soon: "Soon", soon_title: "Coming soon", soon_available: "Coming soon", soon_title_box: "Coming soon in French",
       soon_body: "Chapters arrive as soon as the series is complete in French. Tap the heart to add it to your favorites: you will be notified when it is out.",
       soon_alert_on: "You will be notified when it is out", soon_alert_off: "Alert removed",
-      chapters_range: "Chapters {a} → {b}", credit_source: "Title and chapters provided by", credit_chapter: "Chapter provided by MangaDex · Translation: {g}.",
+      chapters_range: "Chapters {a} → {b}", credit_source: "Title and chapters provided by", credit_fiche: "Title data provided by", credit_chapter: "Chapter provided by MangaDex · Translation: {g}.",
       list_title: "All series", tagline_home: "Read. Discover. Share.", no_comments_yet: "No comments yet",
     },
   };

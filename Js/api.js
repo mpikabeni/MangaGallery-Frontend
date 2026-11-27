@@ -1,106 +1,114 @@
-/* Nexa Admin - API client. Tokens live in sessionStorage only and are shared with the mini app. */
+/* Manga Gallery FR - API client.
+ * Authentication = Telegram initData sent to the backend, which verifies its signature.
+ * Handles Render's cold start: timeouts, automatic retries with back-off and a "server is waking up" signal. */
 (function () {
   "use strict";
-  const cfg = window.NEXA_CONFIG || {};
-  const BASE = String(cfg.apiUrl || "https://mangagallery-backend.onrender.com/api").replace(/\/+$/, "");
+  const cfg = window.NEXA_CONFIG;
+  const BASE = cfg.apiUrl.replace(/\/+$/, "");
   const A = "nexa_access", R = "nexa_refresh";
-  const S = {
-    get(k) { try { return sessionStorage.getItem(k) || ""; } catch (_) { return ""; } },
-    set(k, v) { try { sessionStorage.setItem(k, v); } catch (_) {} },
-    del(k) { try { sessionStorage.removeItem(k); } catch (_) {} },
+  const store = {
+    get: (k) => { try { return sessionStorage.getItem(k); } catch (_) { return null; } },
+    set: (k, v) => { try { sessionStorage.setItem(k, v); } catch (_) {} },
+    del: (k) => { try { sessionStorage.removeItem(k); } catch (_) {} },
   };
-  const token = () => S.get(A);
-  const setTokens = (a, r) => { if (a) S.set(A, a); if (r) S.set(R, r); };
-  const clear = () => { S.del(A); S.del(R); S.del("nexa_admin_user"); };
+
+  class ApiError extends Error {
+    constructor(message, status, code, data) { super(message); this.status = status; this.code = code; this.data = data || {}; }
+  }
   const initData = () => (window.Telegram && Telegram.WebApp && Telegram.WebApp.initData) || "";
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-  // Pages call "/api/categories" or "/categories": BASE already ends with /api, so strip a leading "api/".
-  const norm = (p) => String(p).trim().replace(/^\/+/, "").replace(/^api\//, "");
+  // "waking up" signal: shown when a request is slow or has to be retried
+  let slow = 0;
+  const wake = (on) => document.dispatchEvent(new CustomEvent("nexa:wake", { detail: on }));
 
-  async function rawFetch(path, options, tok) {
-    const headers = Object.assign({ Accept: "application/json" }, options.headers || {});
-    if (options.body !== undefined && !(options.body instanceof FormData)) headers["Content-Type"] = "application/json";
-    if (tok) headers.Authorization = "Bearer " + tok;
-    const res = await fetch(BASE + "/" + norm(path), Object.assign({}, options, { headers }));
-    let body = {};
-    try { body = await res.json(); } catch (_) {}
-    return { res, body };
+  async function once(method, path, { params, body, token, keepalive, timeout = 25000 } = {}) {
+    let url = BASE + "/" + path.replace(/^\/+/, "");
+    if (params) {
+      const q = new URLSearchParams();
+      Object.entries(params).forEach(([k, v]) => { if (v !== undefined && v !== null && v !== "") q.set(k, v); });
+      const s = q.toString();
+      if (s) url += "?" + s;
+    }
+    const headers = { Accept: "application/json" };
+    if (body !== undefined) headers["Content-Type"] = "application/json";
+    if (token) headers.Authorization = "Bearer " + token;
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), timeout);
+    let res;
+    try {
+      res = await fetch(url, { method, headers, body: body !== undefined ? JSON.stringify(body) : undefined, signal: ctrl.signal, keepalive: !!keepalive });
+    } catch (_) {
+      throw new ApiError("network", 0, "NETWORK");
+    } finally { clearTimeout(timer); }
+    let data = null;
+    try { data = await res.json(); } catch (_) {}
+    if (!res.ok) throw new ApiError((data && data.message) || res.statusText, res.status, data && data.code, data);
+    return data;
   }
 
-  let refreshing = null;
-  function renew() {
-    if (!refreshing) {
-      refreshing = (async () => {
-        const rt = S.get(R);
-        if (rt) {
-          const { res, body } = await rawFetch("/auth/refresh", { method: "POST" }, rt);
-          if (res.ok && body.access_token) { S.set(A, body.access_token); return true; }
+  async function raw(method, path, opts = {}) {
+    const retries = opts.retries != null ? opts.retries : (method === "POST" ? 0 : 2);
+    let flagged = false;
+    const t = setTimeout(() => { flagged = true; slow++; wake(true); }, 3500);
+    try {
+      for (let i = 0; ; i++) {
+        try { return await once(method, path, opts); }
+        catch (e) {
+          const transient = e.code === "NETWORK" || [502, 503, 504].includes(e.status);
+          if (!transient || i >= retries) throw e;
+          if (!flagged) { flagged = true; slow++; wake(true); }
+          await sleep(1200 * (i + 1));
         }
-        if (initData()) {
-          const { res, body } = await rawFetch("/auth/telegram", { method: "POST", body: JSON.stringify({ init_data: initData() }) }, "");
-          if (res.ok && body.access_token) { setTokens(body.access_token, body.refresh_token); return true; }
-        }
-        return false;
-      })().finally(() => { refreshing = null; });
-    }
-    return refreshing;
-  }
-
-  async function request(path, options = {}) {
-    let { res, body } = await rawFetch(path, options, token());
-    if (res.status === 401 && !options._retry && (await renew())) {
-      ({ res, body } = await rawFetch(path, options, token()));
-    }
-    if (res.status === 401) clear();
-    if (!res.ok) {
-      const err = new Error((body && (body.message || (body.error && body.error.message))) || `Erreur API (${res.status})`);
-      err.status = res.status; err.code = body && body.code; err.response = body;
-      throw err;
-    }
-    if (Array.isArray(body)) return { items: body, data: body, total: body.length, total_pages: 1, pages: 1 };
-    if (body && body.data && typeof body.data === "object" && !Array.isArray(body.data)) return Object.assign({}, body.data, body);
-    return body;
-  }
-  const qs = (params) => {
-    const q = new URLSearchParams();
-    Object.entries(params || {}).forEach(([k, v]) => { if (v !== undefined && v !== null && v !== "") q.set(k, v); });
-    const s = q.toString();
-    return s ? "?" + s : "";
-  };
-  const send = (method, path, data, options = {}) =>
-    request(path, Object.assign({}, options, { method, body: data === undefined ? undefined : (data instanceof FormData ? data : JSON.stringify(data)) }));
-
-  /** multipart upload with progress (fetch cannot report it). Resolves with the parsed JSON body. */
-  function upload(path, formData, onProgress) {
-    const attempt = (tok) => new Promise((resolve, reject) => {
-      const x = new XMLHttpRequest();
-      x.open("POST", BASE + "/" + norm(path));
-      x.setRequestHeader("Accept", "application/json");
-      if (tok) x.setRequestHeader("Authorization", "Bearer " + tok);
-      x.timeout = 15 * 60 * 1000;
-      if (x.upload && onProgress) x.upload.onprogress = (e) => { if (e.lengthComputable) onProgress(e.loaded / e.total); };
-      x.onload = () => { let body = {}; try { body = JSON.parse(x.responseText); } catch (_) {} resolve({ status: x.status, body }); };
-      x.onerror = () => reject(new Error("Connexion au serveur impossible."));
-      x.ontimeout = () => reject(new Error("Le serveur met trop de temps à répondre."));
-      x.send(formData);
-    });
-    return (async () => {
-      let r = await attempt(token());
-      if (r.status === 401 && (await renew())) r = await attempt(token());
-      if (r.status === 413) throw new Error("Fichier trop volumineux (150 Mo maximum par envoi).");
-      if (r.status >= 400 || (r.body && r.body.success === false)) {
-        const e = new Error((r.body && r.body.message) || `Erreur API (${r.status})`); e.status = r.status; throw e;
       }
-      return r.body;
-    })();
+    } finally { clearTimeout(t); if (flagged && --slow <= 0) { slow = 0; wake(false); } }
   }
 
-  window.API = {
-    get: (p, params, o = {}) => request(p + qs(params), Object.assign({}, o, { method: "GET" })),
-    post: (p, d, o) => send("POST", p, d, o), put: (p, d, o) => send("PUT", p, d, o),
-    patch: (p, d, o) => send("PATCH", p, d, o), delete: (p, o) => send("DELETE", p, undefined, o),
-    setTokens, clearTokens: clear, getToken: token, initData, config: { baseUrl: BASE },
-    raw: rawFetch, upload,
+  let loginFlight = null;
+  function login() {
+    if (!loginFlight) {
+      loginFlight = raw("POST", "/auth/telegram", { body: { init_data: initData() }, retries: 3, timeout: 35000 })
+        .then((d) => { store.set(A, d.access_token); store.set(R, d.refresh_token); return d; })
+        .finally(() => { loginFlight = null; });
+    }
+    return loginFlight;
+  }
+
+  let refreshFlight = null;
+  function refresh() {
+    const rt = store.get(R);
+    if (!rt) return login();
+    if (!refreshFlight) {
+      refreshFlight = raw("POST", "/auth/refresh", { token: rt })
+        .then((d) => { store.set(A, d.access_token); return d; })
+        .catch((e) => (e.code === "NOT_MEMBER" ? Promise.reject(e) : login()))
+        .finally(() => { refreshFlight = null; });
+    }
+    return refreshFlight;
+  }
+
+  async function request(method, path, opts = {}) {
+    if (!store.get(A)) await login();
+    try {
+      return await raw(method, path, { ...opts, token: store.get(A) });
+    } catch (e) {
+      if (e.status === 401) {
+        await refresh();
+        return raw(method, path, { ...opts, token: store.get(A) });
+      }
+      throw e;
+    }
+  }
+
+  window.Api = {
+    ApiError, initData, login,
+    config: () => raw("GET", "/config"),
+    me: () => request("GET", "/auth/me"),
+    get: (p, params, o) => request("GET", p, { ...o, params }),
+    post: (p, body, o) => request("POST", p, { ...o, body: body || {} }),
+    put: (p, body, o) => request("PUT", p, { ...o, body: body || {} }),
+    patch: (p, body, o) => request("PATCH", p, { ...o, body: body || {} }),
+    del: (p, o) => request("DELETE", p, o),
+    clear: () => { store.del(A); store.del(R); },
   };
-  window.api = window.API;
 })();
