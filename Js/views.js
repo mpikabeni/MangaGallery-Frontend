@@ -12,30 +12,38 @@
   /* ================================================================== RANKING (best rated titles) */
   const PERIODS = [["7d", "rank_7d"], ["30d", "rank_30d"], ["90d", "rank_90d"], ["all", "rank_all"]];
   const rankCache = new Map();
-  async function fetchRanking(params) {
-    const key = JSON.stringify(params), hit = rankCache.get(key);
+  /** kind = "titles" (best rated titles) or "chapters" (best rated chapters). Both are built from the votes given at the end of each chapter. */
+  async function fetchRanking(params, kind = "titles") {
+    const key = kind + JSON.stringify(params), hit = rankCache.get(key);
     if (hit && Date.now() - hit.at < 60000) return hit.items;
-    const r = await Api.get("/ratings/ranking", params);
+    const r = await Api.get(kind === "chapters" ? "/ratings/ranking/chapters" : "/ratings/ranking", params);
     rankCache.set(key, { at: Date.now(), items: r.items || [] });
     return r.items || [];
   }
+  const scoreBox = (rt) => h("div", { class: "score" }, h("span", { class: "sc-line" }, icon("star", "fill"), h("b", { text: UI.fmtRate(rt.average) })), h("small", { text: `(${rt.count})` }));
   const rankRow = (m) => h("a", { class: "item rank r" + Math.min(m.rank, 4), href: `#/manga/${m.id}` },
     h("span", { class: "rk", text: String(m.rank) }), h("div", { class: "thumb" }, cover(m)),
     h("div", { class: "body" }, h("b", { text: m.title }),
       h("span", { text: [m.content_type ? T("type_" + m.content_type) : "", m.category && m.category.name].filter(Boolean).join(" · ") })),
-    h("div", { class: "score" }, h("span", { class: "sc-line" }, icon("star", "fill"), h("b", { text: UI.fmtRate(m.rating.average) })), h("small", { text: `(${m.rating.count})` })));
+    scoreBox(m.rating));
+  /** One row of the chapters ranking: opens the chapter in the reader. */
+  const chapterRankRow = (c) => h("a", { class: "item rank r" + Math.min(c.rank, 4), href: `#/read/${c.id}` },
+    h("span", { class: "rk", text: String(c.rank) }), h("div", { class: "thumb" }, cover(c.manga)),
+    h("div", { class: "body" }, h("b", { text: c.manga.title }),
+      h("span", { text: T("chapter_n", { n: num(c.number) }) + (c.title ? " — " + c.title : "") })),
+    scoreBox(c.rating));
   /** Fills `box` with the ranking of one period. `alive()` tells whether the answer is still wanted (the reader may have switched period meanwhile). */
-  async function paintRanking(box, params, alive) {
+  async function paintRanking(box, params, alive, kind = "titles") {
     box.replaceChildren(...skel(3, 74));
     let items;
-    try { items = await fetchRanking(params); } catch (_) { if (alive()) box.replaceChildren(empty("info", T("error_title"), T("error_body"))); return; }
+    try { items = await fetchRanking(params, kind); } catch (_) { if (alive()) box.replaceChildren(empty("info", T("error_title"), T("error_body"))); return; }
     if (!alive()) return;
-    box.replaceChildren(...(items.length ? items.map(rankRow) : [empty("star", T("rank_empty_title"), T("rank_empty_body"))]));
+    box.replaceChildren(...(items.length ? items.map(kind === "chapters" ? chapterRankRow : rankRow) : [empty("star", T("rank_empty_title"), T("rank_empty_body"))]));
   }
   function rankingSection(first) {
     let period = "7d", token = 0;
     const box = h("div", { class: "list rank-list" }, ...(first.length ? first.map(rankRow) : [empty("star", T("rank_empty_title"), T("rank_empty_body"))]));
-    rankCache.set(JSON.stringify({ period, section: "normal", limit: 5 }), { at: Date.now(), items: first });
+    rankCache.set("titles" + JSON.stringify({ period, section: "normal", limit: 5 }), { at: Date.now(), items: first });
     const seg = segmented(PERIODS.map(([id, k]) => [id, T(k)]), period, (id) => { period = id; const my = ++token; paintRanking(box, { period, section: "normal", limit: 5 }, () => my === token); });
     return h("section", { class: "section reveal" },
       h("div", { class: "section-head" }, h("h2", { text: "🏆 " + T("ranking_title") }), h("a", { class: "link", href: "#/ranking" }, T("see_all"), icon("chevron"))),
@@ -43,14 +51,19 @@
   }
   async function ranking(ctx) {
     const S = sh();
+    let kind = ctx.q.get("tab") === "chapters" ? "chapters" : "titles";
     let period = PERIODS.some(([id]) => id === ctx.q.get("period")) ? ctx.q.get("period") : "30d", type = ["manga", "webtoon", "comic"].includes(ctx.q.get("type")) ? ctx.q.get("type") : "", token = 0;
     const box = h("div", { class: "list rank-list" }), typeChips = h("div", { class: "chips" });
-    const load = () => { history.replaceState(null, "", "#/ranking?period=" + period + (type ? "&type=" + type : "")); const my = ++token; paintRanking(box, { period, section: "normal", type, limit: 50 }, () => my === token && ctx.ok()); };
+    const load = () => {
+      history.replaceState(null, "", "#/ranking?tab=" + kind + "&period=" + period + (type ? "&type=" + type : ""));
+      const my = ++token; paintRanking(box, { period, section: "normal", type, limit: 50 }, () => my === token && ctx.ok(), kind);
+    };
     const paintTypes = () => typeChips.replaceChildren(...[["", T("type_all")], ...["manga", "webtoon", "comic"].map((t) => [t, T("type_" + t)])].map(([id, label]) =>
       h("button", { class: "chip" + (type === id ? " on" : ""), type: "button", text: label, onclick: () => { type = id; haptic("select"); paintTypes(); load(); } })));
+    const tabs = segmented([["titles", T("rank_tab_titles")], ["chapters", T("rank_tab_chapters")]], kind, (id) => { kind = id; load(); });
     const seg = segmented(PERIODS.map(([id, k]) => [id, T(k)]), period, (id) => { period = id; load(); });
     paintTypes();
-    S.render(S.page({ title: T("ranking_title"), back: true, body: [seg, h("div", { style: "margin-top:12px" }, typeChips), h("div", { style: "margin-top:16px" }, box)] }), { tab: null, refresh: () => { rankCache.clear(); load(); } });
+    S.render(S.page({ title: T("ranking_title"), back: true, body: [tabs, h("div", { style: "margin-top:12px" }, seg), h("div", { style: "margin-top:12px" }, typeChips), h("div", { style: "margin-top:16px" }, box)] }), { tab: null, refresh: () => { rankCache.clear(); load(); } });
     load();
   }
 
@@ -335,7 +348,8 @@
         const date = c.published_at;
         return h("a", { class: "chap" + (readSet.has(c.id) ? " read" : ""), href: `#/read/${c.id}` },
           h("div", {}, h("b", {}, T("chapter_n", { n: num(c.number) }) + (c.title ? " — " + c.title : ""), date && isRecent(date) ? h("span", { class: "pill-new", text: T("new_pill") }) : null), h("small", { text: timeAgo(date) + (c.group_name ? " · " + c.group_name : "") })),
-          h("div", { class: "state" }, cur && cur.chapter_id === c.id && !readSet.has(c.id) ? h("span", { text: `${cur.page}/${cur.total || "?"}` }) : null,
+          h("div", { class: "state" }, c.rating_count > 0 && c.rating_avg != null ? h("span", { class: "c-rate" }, icon("star", "fill"), UI.fmtRate(c.rating_avg)) : null,
+            cur && cur.chapter_id === c.id && !readSet.has(c.id) ? h("span", { text: `${cur.page}/${cur.total || "?"}` }) : null,
             readSet.has(c.id) ? icon("checkcircle", "check") : icon("chevron")));
       }), 12) : [empty("book", T("no_chapters"))]));
       list.classList.add("stagger");
@@ -356,7 +370,6 @@
     const rateTag = h("span", { class: "tag rate-tag hidden" });
     const paintRateTag = (rt) => { const on = rt && rt.count > 0; rateTag.classList.toggle("hidden", !on); if (on) rateTag.replaceChildren(icon("star", "fill"), `${UI.fmtRate(rt.average)} (${rt.count})`); };
     paintRateTag(m.rating);
-    const rateBox = soon ? null : UI.rateWidget(m, { initial: m.rating, onChange: (rt) => { paintRateTag(rt); rankCache.clear(); } });
 
     const statVal = (v, lbl) => h("div", { class: "stat" }, h("b", { text: v }), h("span", { text: lbl }));
     const cnt = statVal("0", T("stat_chapters"));
@@ -373,7 +386,6 @@
             statusTag(m.status) ? h("span", { class: "tag " + (m.status === "completed" ? "ok" : "warn"), text: statusTag(m.status) }) : null))),
       soon ? null : h("div", { class: "stats reveal" }, cnt, statVal(statusTag(m.status) || "—", T("stat_status")), statVal(timeAgo(lastDate) || "—", T("stat_update"))),
       h("div", { class: "m-actions" }, cta, favBtn),
-      rateBox ? h("div", { style: "margin-top:14px" }, rateBox) : null,
       readCount ? h("div", { style: "margin-top:12px" }, h("div", { class: "progress" }, h("i", { style: `width:${Math.max(5, Math.round((readCount / chapters.length) * 100))}%` })),
         h("small", { class: "muted", text: T("read_progress", { a: readCount, b: chapters.length }) })) : null,
       h("section", { class: "section" }, descEl, more,

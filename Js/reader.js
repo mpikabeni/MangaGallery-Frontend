@@ -22,7 +22,7 @@
 
     const goManga = () => S.go(`#/manga/${manga.id}`);
     const navTo = (cid) => location.replace(location.pathname + location.search + `#/read/${cid}`);
-    const rate = UI.rateWidget(manga, { compact: true });          // shown at the end of the chapter; its data is fetched when the last page is reached
+    const rate = UI.rateWidget(manga, ch, { compact: true });       // vote on THIS chapter, shown at its end; its data is fetched when the last page is reached
     let celebrated = false;
     const celebrate = () => { if (celebrated || r.next_id) return; celebrated = true; FX.confetti(); haptic("success"); };
 

@@ -145,20 +145,24 @@
     return wrap;
   }
 
-  /** "Rate this title" box. Used at the end of a chapter (reader) and on the title page.
-   *  `initial` = the rating summary already sent by the API (otherwise call `.load()`); `onChange(summary)` after each vote. */
-  function rateWidget(manga, opts = {}) {
+  /** "Rate this chapter" box, shown at the END OF EACH CHAPTER in the reader. The vote is for this chapter; the rating of the title
+   *  is built from the votes of its chapters. `initial` = the summary already known (otherwise call `.load()`); `onChange(summary)` after each vote. */
+  function rateWidget(manga, chapter, opts = {}) {
     let st = opts.initial || null, loading = false, busy = false;
+    const url = `/ratings/chapter/${chapter.id}`;
     const title = h("b"), sub = h("span");
     const clear = h("button", { class: "link hidden", type: "button", text: T("rating_remove") });
     const picker = starPicker(0, async (n) => {
       if (busy) return;
-      if (st && st.can_rate === false && !st.mine) { haptic("error"); return toast(T("rating_need_read")); }
       busy = true; picker.set(n); haptic("select");
       const before = st;
       try {
         if (window.Store) await Store.flush();            // the "chapter finished" progress must reach the server before the vote
-        st = await Api.put(`/ratings/manga/${manga.id}`, { score: n });
+        if (st && st.can_rate === false && !st.mine) {    // the box may have loaded before that progress was saved: check again once
+          try { st = await Api.get(url); } catch (_) { /* the PUT below answers */ }
+          if (st && st.can_rate === false && !st.mine) { st = before; haptic("error"); toast(T("rating_need_read")); busy = false; paint(); return; }
+        }
+        st = await Api.put(url, { score: n });
         haptic("success"); toast(T("rating_thanks"));
         if (opts.onChange) opts.onChange(st);
       } catch (e) { st = before; haptic("error"); toast(e && e.code === "NOT_READ" ? T("rating_need_read") : (e && e.status === 429 && e.message) || T("rating_error")); }
@@ -166,7 +170,7 @@
     });
     clear.addEventListener("click", async () => {
       if (busy) return; busy = true;
-      try { st = await Api.del(`/ratings/manga/${manga.id}`); toast(T("rating_removed")); if (opts.onChange) opts.onChange(st); } catch (_) { toast(T("rating_error")); }
+      try { st = await Api.del(url); toast(T("rating_removed")); if (opts.onChange) opts.onChange(st); } catch (_) { toast(T("rating_error")); }
       busy = false; paint();
     });
     const el = h("div", { class: "rate-box" + (opts.compact ? " compact" : "") }, h("div", { class: "rate-txt" }, title, sub), picker, clear);
@@ -181,7 +185,7 @@
     el.load = async () => {
       if (st || loading) return;
       loading = true;
-      try { st = await Api.get(`/ratings/manga/${manga.id}`); } catch (_) { /* the box still works */ }
+      try { st = await Api.get(url); } catch (_) { /* the box still works */ }
       loading = false; paint();
     };
     paint();
