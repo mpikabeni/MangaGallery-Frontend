@@ -45,6 +45,7 @@
         ch.source === "mangadex" ? h("div", { class: "credit" }, T("credit_chapter", { g: ch.group_name || "—" }) + " ",
           ch.source_url ? h("a", { href: ch.source_url, target: "_blank", rel: "noopener", text: "MangaDex" }) : null) : null,
         total ? rate : null,
+        h("button", { class: "btn btn-sm", type: "button", onclick: UI.invite }, icon("users"), T("invite_btn")),
         r.next_id ? h("button", { class: "btn btn-primary", type: "button", onclick: () => navTo(r.next_id) }, T("reader_next"), icon("chevron")) : null,
         h("button", { class: "btn", type: "button", onclick: goManga, text: T("reader_back") }));
 

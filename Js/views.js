@@ -136,6 +136,8 @@
       h("p", { class: "muted", style: "margin-top:2px", text: T("tagline_home") })));
 
     if (items.length) body.push(heroCarousel(items.slice(0, 5)));
+    else if (R[0].status === "rejected") body.push(empty("info", T("error_title"), T("error_body"),      // the list failed to load (server asleep...): never claim "nothing to read"
+      h("button", { class: "btn btn-primary", type: "button", onclick: () => home({ ...ctx, silent: false }) }, icon("refresh"), T("retry"))));
     else body.push(empty("book", T("home_empty_title"), T("home_empty_body")));
 
     body.push(scBanner());
@@ -154,6 +156,7 @@
           h("div", { class: "progress" }, h("i", { style: `width:${e.total ? Math.max(5, Math.round((e.page / e.total) * 100)) : 5}%` })))))));
     }
     if (R[5].status === "fulfilled") body.push(rankingSection(topWeek));
+    body.push(UI.inviteCard());
     if (Array.isArray(cats) && cats.length) {
       body.push(h("section", { class: "section reveal" },
         h("div", { class: "section-head" }, h("h2", { text: T("home_categories") })),
@@ -525,7 +528,7 @@
         }) : null)),
       h("div", { class: "group" }, h("h3", { text: T("library") }), h("div", { class: "card" },
         danger(T("clear_history"), "trash", () => Store.clearHistory()), danger(T("clear_favorites"), "heart", () => Store.clearFavorites()))),
-      h("div", { class: "group" }, h("h3", { text: T("community") }), h("div", { class: "card" }, cell("send", T("nexa_channel"), cfg.channel, () => openLink(cfg.channelUrl)))),
+      h("div", { class: "group" }, h("h3", { text: T("community") }), h("div", { class: "card" }, cell("users", T("invite_btn"), "", () => UI.invite()), cell("send", T("nexa_channel"), cfg.channel, () => openLink(cfg.channelUrl)))),
       h("div", { class: "group" }, h("h3", { text: T("about") }), h("div", { class: "card" },
         h("div", { class: "about" }, h("img", { src: "assets/logo-original-192.png", alt: "Manga Gallery" }), h("b", { text: "Manga Gallery FR" }), h("p", { class: "muted", text: `${T("made_by")} · ${cfg.channel}` })),
         h("div", { class: "cell press", role: "button", tabindex: "0", onclick: onVersionTap }, icon("info"), h("span", { class: "grow", text: T("version") }), h("span", { class: "val", text: cfg.version })))),

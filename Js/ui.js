@@ -119,12 +119,25 @@
   const empty = (ic, title, body, action) => h("div", { class: "empty" }, h("div", { class: "art" }, icon(ic)), h("b", { text: title }), body ? h("p", { text: body }) : null, action || null);
   const skel = (n, hgt) => Array.from({ length: n }, () => { const s = h("div", { class: "skel" }); s.style.height = hgt + "px"; return s; });
 
+  /* ---- invite friends: opens Telegram's share sheet with the bot link */
+  let botName = (cfg.botUsername || "").replace(/^@/, "");
+  async function invite() {
+    if (!botName) { try { const c = await Api.config(); botName = (c && c.bot_username) || ""; } catch (_) { /* fall back to the channel */ } }
+    const link = botName ? `https://t.me/${botName}` : cfg.channelUrl;
+    haptic("light");
+    openLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(T("invite_text"))}`);
+  }
+  const inviteCard = () => h("section", { class: "section reveal" }, h("div", { class: "invite-card" },
+    h("span", { class: "inv-ico" }, icon("users")),
+    h("div", { class: "inv-txt" }, h("b", { text: T("invite_title") }), h("span", { text: T("invite_body") })),
+    h("button", { class: "btn btn-primary btn-sm", type: "button", onclick: invite }, icon("send"), T("invite_btn"))));
+
   /* ---- ratings (1-5 stars) */
   const fmtRate = (v) => (v == null || isNaN(Number(v)) ? "—" : Number(v).toFixed(1));
 
   /** Five tappable stars. `.set(n)` repaints them. */
   function starPicker(value, onPick) {
-    const wrap = h("div", { class: "stars", role: "radiogroup", "aria-label": T("rate_title") });
+    const wrap = h("div", { class: "stars", role: "radiogroup", "aria-label": T("rating_title") });
     const btns = [1, 2, 3, 4, 5].map((n) => h("button", { type: "button", class: "star", role: "radio", "aria-label": `${n}/5`, onclick: () => onPick(n) }, icon("star")));
     wrap.set = (v) => btns.forEach((b, i) => { const on = i < (v || 0); b.classList.toggle("on", on); b.firstChild.classList.toggle("fill", on); });
     wrap.append(...btns);
@@ -137,32 +150,32 @@
   function rateWidget(manga, opts = {}) {
     let st = opts.initial || null, loading = false, busy = false;
     const title = h("b"), sub = h("span");
-    const clear = h("button", { class: "link hidden", type: "button", text: T("rate_remove") });
+    const clear = h("button", { class: "link hidden", type: "button", text: T("rating_remove") });
     const picker = starPicker(0, async (n) => {
       if (busy) return;
-      if (st && st.can_rate === false && !st.mine) { haptic("error"); return toast(T("rate_need_read")); }
+      if (st && st.can_rate === false && !st.mine) { haptic("error"); return toast(T("rating_need_read")); }
       busy = true; picker.set(n); haptic("select");
       const before = st;
       try {
         if (window.Store) await Store.flush();            // the "chapter finished" progress must reach the server before the vote
-        st = await Api.put(`/ratings/manga/${manga.id}`, { score: n }, { retries: 0 });
-        haptic("success"); toast(T("rate_thanks"));
+        st = await Api.put(`/ratings/manga/${manga.id}`, { score: n });
+        haptic("success"); toast(T("rating_thanks"));
         if (opts.onChange) opts.onChange(st);
-      } catch (e) { st = before; haptic("error"); toast(T(e && e.code === "NOT_READ" ? "rate_need_read" : "rate_error")); }
+      } catch (e) { st = before; haptic("error"); toast(e && e.code === "NOT_READ" ? T("rating_need_read") : (e && e.status === 429 && e.message) || T("rating_error")); }
       busy = false; paint();
     });
     clear.addEventListener("click", async () => {
       if (busy) return; busy = true;
-      try { st = await Api.del(`/ratings/manga/${manga.id}`); toast(T("rate_removed")); if (opts.onChange) opts.onChange(st); } catch (_) { toast(T("rate_error")); }
+      try { st = await Api.del(`/ratings/manga/${manga.id}`); toast(T("rating_removed")); if (opts.onChange) opts.onChange(st); } catch (_) { toast(T("rating_error")); }
       busy = false; paint();
     });
     const el = h("div", { class: "rate-box" + (opts.compact ? " compact" : "") }, h("div", { class: "rate-txt" }, title, sub), picker, clear);
     function paint() {
       const mine = st && st.mine;
       picker.set(mine || 0);
-      title.textContent = mine ? T("rate_yours", { n: mine }) : T("rate_title");
-      sub.textContent = st && st.count ? T("rate_summary", { avg: fmtRate(st.average), n: st.count }) : T(st && st.can_rate === false ? "rate_locked" : "rate_none");
-      if (st && st.count && st.can_rate === false && !mine) sub.textContent += " · " + T("rate_locked");
+      title.textContent = mine ? T("rating_yours", { n: mine }) : T("rating_title");
+      sub.textContent = st && st.count ? T("rating_summary", { avg: fmtRate(st.average), n: st.count }) : T(st && st.can_rate === false ? "rating_locked" : "rating_none");
+      if (st && st.count && st.can_rate === false && !mine) sub.textContent += " · " + T("rating_locked");
       clear.classList.toggle("hidden", !mine);
     }
     el.load = async () => {
@@ -208,5 +221,5 @@
   }
 
   window.UI = { h, icon, T, tg, safeImg, haptic, toast, askConfirm, openLink, timeAgo, isRecent, num, initials, gradient, statusTag,
-    throttle, lazyImg, cover, mangaCard, avatar, empty, skel, sheet, segmented, fmtRate, starPicker, rateWidget };
+    throttle, lazyImg, cover, mangaCard, avatar, empty, skel, sheet, segmented, fmtRate, starPicker, rateWidget, invite, inviteCard };
 })();
