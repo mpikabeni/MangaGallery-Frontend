@@ -92,6 +92,7 @@
     }
     box.append(h("span", { class: "shine" }));
     if (badge) box.append(h("span", { class: "badge", text: badge }));
+    if (m && m.rating_count > 0 && m.rating_avg != null) box.append(h("span", { class: "rate-chip" }, icon("star", "fill"), fmtRate(m.rating_avg)));
     return box;
   }
   function mangaCard(m, opts = {}) {
@@ -117,6 +118,62 @@
   }
   const empty = (ic, title, body, action) => h("div", { class: "empty" }, h("div", { class: "art" }, icon(ic)), h("b", { text: title }), body ? h("p", { text: body }) : null, action || null);
   const skel = (n, hgt) => Array.from({ length: n }, () => { const s = h("div", { class: "skel" }); s.style.height = hgt + "px"; return s; });
+
+  /* ---- ratings (1-5 stars) */
+  const fmtRate = (v) => (v == null || isNaN(Number(v)) ? "—" : Number(v).toFixed(1));
+
+  /** Five tappable stars. `.set(n)` repaints them. */
+  function starPicker(value, onPick) {
+    const wrap = h("div", { class: "stars", role: "radiogroup", "aria-label": T("rate_title") });
+    const btns = [1, 2, 3, 4, 5].map((n) => h("button", { type: "button", class: "star", role: "radio", "aria-label": `${n}/5`, onclick: () => onPick(n) }, icon("star")));
+    wrap.set = (v) => btns.forEach((b, i) => { const on = i < (v || 0); b.classList.toggle("on", on); b.firstChild.classList.toggle("fill", on); });
+    wrap.append(...btns);
+    wrap.set(value);
+    return wrap;
+  }
+
+  /** "Rate this title" box. Used at the end of a chapter (reader) and on the title page.
+   *  `initial` = the rating summary already sent by the API (otherwise call `.load()`); `onChange(summary)` after each vote. */
+  function rateWidget(manga, opts = {}) {
+    let st = opts.initial || null, loading = false, busy = false;
+    const title = h("b"), sub = h("span");
+    const clear = h("button", { class: "link hidden", type: "button", text: T("rate_remove") });
+    const picker = starPicker(0, async (n) => {
+      if (busy) return;
+      if (st && st.can_rate === false && !st.mine) { haptic("error"); return toast(T("rate_need_read")); }
+      busy = true; picker.set(n); haptic("select");
+      const before = st;
+      try {
+        if (window.Store) await Store.flush();            // the "chapter finished" progress must reach the server before the vote
+        st = await Api.put(`/ratings/manga/${manga.id}`, { score: n }, { retries: 0 });
+        haptic("success"); toast(T("rate_thanks"));
+        if (opts.onChange) opts.onChange(st);
+      } catch (e) { st = before; haptic("error"); toast(T(e && e.code === "NOT_READ" ? "rate_need_read" : "rate_error")); }
+      busy = false; paint();
+    });
+    clear.addEventListener("click", async () => {
+      if (busy) return; busy = true;
+      try { st = await Api.del(`/ratings/manga/${manga.id}`); toast(T("rate_removed")); if (opts.onChange) opts.onChange(st); } catch (_) { toast(T("rate_error")); }
+      busy = false; paint();
+    });
+    const el = h("div", { class: "rate-box" + (opts.compact ? " compact" : "") }, h("div", { class: "rate-txt" }, title, sub), picker, clear);
+    function paint() {
+      const mine = st && st.mine;
+      picker.set(mine || 0);
+      title.textContent = mine ? T("rate_yours", { n: mine }) : T("rate_title");
+      sub.textContent = st && st.count ? T("rate_summary", { avg: fmtRate(st.average), n: st.count }) : T(st && st.can_rate === false ? "rate_locked" : "rate_none");
+      if (st && st.count && st.can_rate === false && !mine) sub.textContent += " · " + T("rate_locked");
+      clear.classList.toggle("hidden", !mine);
+    }
+    el.load = async () => {
+      if (st || loading) return;
+      loading = true;
+      try { st = await Api.get(`/ratings/manga/${manga.id}`); } catch (_) { /* the box still works */ }
+      loading = false; paint();
+    };
+    paint();
+    return el;
+  }
 
   /** Bottom sheet with spring animation. Returns { close }. */
   function sheet(title, content) {
@@ -151,5 +208,5 @@
   }
 
   window.UI = { h, icon, T, tg, safeImg, haptic, toast, askConfirm, openLink, timeAgo, isRecent, num, initials, gradient, statusTag,
-    throttle, lazyImg, cover, mangaCard, avatar, empty, skel, sheet, segmented };
+    throttle, lazyImg, cover, mangaCard, avatar, empty, skel, sheet, segmented, fmtRate, starPicker, rateWidget };
 })();

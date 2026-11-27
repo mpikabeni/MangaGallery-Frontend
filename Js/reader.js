@@ -22,6 +22,7 @@
 
     const goManga = () => S.go(`#/manga/${manga.id}`);
     const navTo = (cid) => location.replace(location.pathname + location.search + `#/read/${cid}`);
+    const rate = UI.rateWidget(manga, { compact: true });          // shown at the end of the chapter; its data is fetched when the last page is reached
     let celebrated = false;
     const celebrate = () => { if (celebrated || r.next_id) return; celebrated = true; FX.confetti(); haptic("success"); };
 
@@ -43,6 +44,7 @@
         h("div", { class: "big", text: r.next_id ? T("reader_end_title") : T("reader_last") }),
         ch.source === "mangadex" ? h("div", { class: "credit" }, T("credit_chapter", { g: ch.group_name || "—" }) + " ",
           ch.source_url ? h("a", { href: ch.source_url, target: "_blank", rel: "noopener", text: "MangaDex" }) : null) : null,
+        total ? rate : null,
         r.next_id ? h("button", { class: "btn btn-primary", type: "button", onclick: () => navTo(r.next_id) }, T("reader_next"), icon("chevron")) : null,
         h("button", { class: "btn", type: "button", onclick: goManga, text: T("reader_back") }));
 
@@ -55,6 +57,7 @@
         scrub.style.setProperty("--v", (total > 1 ? ((pageNo - 1) / (total - 1)) * 100 : 100) + "%");
         prog.style.width = (total > 1 ? ((pageNo - 1) / (total - 1)) * 100 : 100) + "%";
         if (total) Store.queueProgress(manga, ch, pageNo, total);
+        if (total && pageNo >= total) rate.load();
       }
       scrub.addEventListener("input", () => api.goTo(Number(scrub.value) - 1));
 

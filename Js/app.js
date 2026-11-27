@@ -53,7 +53,7 @@
 
   /* ------------------------------------------------------------------ screens: gate / errors */
   function screen(opts) {
-    endSplash(); Nav.hide(); FX.setRefresh(null);
+    Nav.hide(); FX.setRefresh(null);
     $root.replaceChildren(h("div", { class: "screen" },
       h("img", { class: "logo", src: "assets/logo-original.png", alt: "Manga Gallery" }),
       opts.spinner ? h("div", { class: "spinner" }) : null,
@@ -101,7 +101,7 @@
   }
   const ROOTS = new Set(["/", "/browse", "/sainte-culture", "/library", "/library/favorites", "/library/history", "/settings"]);
   const routes = [
-    [/^\/?$/, (c) => Nexa.views.home(c)], [/^\/browse$/, (c) => Nexa.views.browse(c)], [/^\/sainte-culture$/, (c) => Nexa.views.sainteCulture(c)], [/^\/manga\/(\d+)$/, (c) => Nexa.views.mangaPage(c)],
+    [/^\/?$/, (c) => Nexa.views.home(c)], [/^\/browse$/, (c) => Nexa.views.browse(c)], [/^\/ranking$/, (c) => Nexa.views.ranking(c)], [/^\/sainte-culture$/, (c) => Nexa.views.sainteCulture(c)], [/^\/manga\/(\d+)$/, (c) => Nexa.views.mangaPage(c)],
     [/^\/read\/(\d+)$/, (c) => Nexa.reader(c)], [/^\/library(?:\/(favorites|history))?$/, (c) => Nexa.views.library(c)],
     [/^\/notifications$/, (c) => Nexa.views.notifications(c)], [/^\/settings$/, (c) => Nexa.views.settings(c)],
   ];
@@ -143,24 +143,10 @@
   /* ------------------------------------------------------------------ splash + wake-up banner */
   const splash = document.getElementById("splash");
   const t0 = Date.now();
-  let splashEnding = false;
-  function endSplash(now) {
-    if (!splash || splashEnding) return;
-    splashEnding = true;
-    const hide = () => { splash.classList.add("out"); setTimeout(() => splash.remove(), 700); };
-    if (now) hide(); else setTimeout(hide, Math.max(0, 1700 - (Date.now() - t0)));
+  function endSplash() {
+    if (!splash || splash.classList.contains("out")) return;
+    setTimeout(() => { splash.classList.add("out"); setTimeout(() => splash.remove(), 700); }, Math.max(0, 1700 - (Date.now() - t0)));
   }
-  // Safety net: the splash can NEVER stay forever, whatever happens (slow server, JS error, hung request).
-  setTimeout(() => {
-    if (!document.getElementById("splash")) return;
-    endSplash(true);
-    if (!$root.firstElementChild) {
-      screen({ title: T("net_title"), body: T("net_body"), buttons: [{ label: T("retry"), cls: "btn-primary", icon: "refresh", onClick: () => location.reload() }] });
-    }
-  }, 15000);
-  const bail = () => { if (document.getElementById("splash") && !$root.firstElementChild) { endSplash(true); screen({ title: T("error_title"), body: T("error_body"), buttons: [{ label: T("retry"), cls: "btn-primary", icon: "refresh", onClick: () => location.reload() }] }); } };
-  window.addEventListener("error", bail);
-  window.addEventListener("unhandledrejection", bail);
   let wakeEl;
   document.addEventListener("nexa:wake", (e) => {
     const hint = document.getElementById("splash-hint");
@@ -198,9 +184,7 @@
 
   /* ------------------------------------------------------------------ boot */
   async function afterAuth() {
-    // The library (favorites, history...) must never block the opening: wait at most 5 s, then continue with the cache.
-    try { await Promise.race([Store.load(state.user).catch(() => {}), new Promise((r) => setTimeout(r, 5000))]); } catch (_) { /* the app still works from the cache */ }
-    try {
+    try { await Store.load(state.user); } catch (_) { /* the app still works from the cache */ }
     I18n.onChange = (p) => Store.savePrefs({ language: p });
     Theme.onChange = (p) => Store.savePrefs({ theme: p });
     const sp = tg && tg.initDataUnsafe && tg.initDataUnsafe.start_param;           // deep link: ?startapp=m12
@@ -215,8 +199,7 @@
     if (tg && tg.BackButton) { tg.BackButton.offClick && tg.BackButton.offClick(onBack); tg.BackButton.onClick(onBack); }
     window.removeEventListener("hashchange", navigate);
     window.addEventListener("hashchange", navigate);
-    } catch (_) { /* deep-link / Telegram button setup is optional */ }
-    try { await navigate(); } catch (e) { authError(e); return; }
+    await navigate();
     endSplash();
   }
   async function boot() {
@@ -224,7 +207,7 @@
     Theme.apply(); I18n.apply();
     if (!Api.initData()) { endSplash(); return landing(); }
     try { await authenticate(); } catch (e) { return authError(e); }
-    try { await afterAuth(); } catch (e) { authError(e); }
+    await afterAuth();
   }
   if (tg && tg.onEvent) tg.onEvent("themeChanged", () => Theme.apply());
   boot();

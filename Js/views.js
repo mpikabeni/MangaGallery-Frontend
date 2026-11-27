@@ -9,6 +9,51 @@
   const stagger = (nodes, max = 14) => nodes.map((n, i) => { n.style.setProperty("--i", Math.min(i, max)); return n; });
   const centerOf = (el) => { const r = el.getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; };
 
+  /* ================================================================== RANKING (best rated titles) */
+  const PERIODS = [["7d", "rank_7d"], ["30d", "rank_30d"], ["90d", "rank_90d"], ["all", "rank_all"]];
+  const rankCache = new Map();
+  async function fetchRanking(params) {
+    const key = JSON.stringify(params), hit = rankCache.get(key);
+    if (hit && Date.now() - hit.at < 60000) return hit.items;
+    const r = await Api.get("/ratings/ranking", params);
+    rankCache.set(key, { at: Date.now(), items: r.items || [] });
+    return r.items || [];
+  }
+  const rankRow = (m) => h("a", { class: "item rank r" + Math.min(m.rank, 4), href: `#/manga/${m.id}` },
+    h("span", { class: "rk", text: String(m.rank) }), h("div", { class: "thumb" }, cover(m)),
+    h("div", { class: "body" }, h("b", { text: m.title }),
+      h("span", { text: [m.content_type ? T("type_" + m.content_type) : "", m.category && m.category.name].filter(Boolean).join(" · ") })),
+    h("div", { class: "score" }, h("span", { class: "sc-line" }, icon("star", "fill"), h("b", { text: UI.fmtRate(m.rating.average) })), h("small", { text: `(${m.rating.count})` })));
+  /** Fills `box` with the ranking of one period. `alive()` tells whether the answer is still wanted (the reader may have switched period meanwhile). */
+  async function paintRanking(box, params, alive) {
+    box.replaceChildren(...skel(3, 74));
+    let items;
+    try { items = await fetchRanking(params); } catch (_) { if (alive()) box.replaceChildren(empty("info", T("error_title"), T("error_body"))); return; }
+    if (!alive()) return;
+    box.replaceChildren(...(items.length ? items.map(rankRow) : [empty("star", T("rank_empty_title"), T("rank_empty_body"))]));
+  }
+  function rankingSection(first) {
+    let period = "7d", token = 0;
+    const box = h("div", { class: "list rank-list" }, ...(first.length ? first.map(rankRow) : [empty("star", T("rank_empty_title"), T("rank_empty_body"))]));
+    rankCache.set(JSON.stringify({ period, section: "normal", limit: 5 }), { at: Date.now(), items: first });
+    const seg = segmented(PERIODS.map(([id, k]) => [id, T(k)]), period, (id) => { period = id; const my = ++token; paintRanking(box, { period, section: "normal", limit: 5 }, () => my === token); });
+    return h("section", { class: "section reveal" },
+      h("div", { class: "section-head" }, h("h2", { text: "🏆 " + T("ranking_title") }), h("a", { class: "link", href: "#/ranking" }, T("see_all"), icon("chevron"))),
+      seg, h("div", { style: "margin-top:12px" }, box));
+  }
+  async function ranking(ctx) {
+    const S = sh();
+    let period = PERIODS.some(([id]) => id === ctx.q.get("period")) ? ctx.q.get("period") : "30d", type = ["manga", "webtoon", "comic"].includes(ctx.q.get("type")) ? ctx.q.get("type") : "", token = 0;
+    const box = h("div", { class: "list rank-list" }), typeChips = h("div", { class: "chips" });
+    const load = () => { history.replaceState(null, "", "#/ranking?period=" + period + (type ? "&type=" + type : "")); const my = ++token; paintRanking(box, { period, section: "normal", type, limit: 50 }, () => my === token && ctx.ok()); };
+    const paintTypes = () => typeChips.replaceChildren(...[["", T("type_all")], ...["manga", "webtoon", "comic"].map((t) => [t, T("type_" + t)])].map(([id, label]) =>
+      h("button", { class: "chip" + (type === id ? " on" : ""), type: "button", text: label, onclick: () => { type = id; haptic("select"); paintTypes(); load(); } })));
+    const seg = segmented(PERIODS.map(([id, k]) => [id, T(k)]), period, (id) => { period = id; load(); });
+    paintTypes();
+    S.render(S.page({ title: T("ranking_title"), back: true, body: [seg, h("div", { style: "margin-top:12px" }, typeChips), h("div", { style: "margin-top:16px" }, box)] }), { tab: null, refresh: () => { rankCache.clear(); load(); } });
+    load();
+  }
+
   /* ================================================================== HOME */
   function heroCarousel(items) {
     const DUR = 5200;
@@ -75,13 +120,14 @@
       S.render(S.page({ brand: true, right: "bell", body: [hs, ...skel(2, 84)] }), { tab: "home" });
     }
     const R = await Promise.allSettled([Api.get("/mangas", { per_page: 12, sort: "latest", section: "normal" }), Api.get("/chapters/latest", { per_page: 10, section: "normal" }),
-      Api.get("/categories"), Api.get("/notifications/me/unread-count"), Api.get("/mangas", { coming: 1, section: "normal", per_page: 12 })]);
+      Api.get("/categories"), Api.get("/notifications/me/unread-count"), Api.get("/mangas", { coming: 1, section: "normal", per_page: 12 }), fetchRanking({ period: "7d", section: "normal", limit: 5 })]);
     if (!ctx.ok()) return;
     if (R[0].status === "rejected" && R[1].status === "rejected") throw R[0].reason;
     const val = (i, d) => (R[i].status === "fulfilled" ? R[i].value : d);
     const items = val(0, {}).items || [], ups = val(1, {}).items || [], cats = val(2, []);
     S.state.unread = val(3, {}).unread || 0;
     const soonItems = val(4, {}).items || [];
+    const topWeek = val(5, []);
 
     const body = [];
     const first = (user.name || "").split(" ")[0];
@@ -107,6 +153,7 @@
           h("div", { class: "tilt" }, cover(e.manga)), h("div", { class: "t", text: e.manga.title }), h("div", { class: "s", text: T("ch_short", { n: num(e.number) }) }),
           h("div", { class: "progress" }, h("i", { style: `width:${e.total ? Math.max(5, Math.round((e.page / e.total) * 100)) : 5}%` })))))));
     }
+    if (R[5].status === "fulfilled") body.push(rankingSection(topWeek));
     if (Array.isArray(cats) && cats.length) {
       body.push(h("section", { class: "section reveal" },
         h("div", { class: "section-head" }, h("h2", { text: T("home_categories") })),
@@ -303,6 +350,11 @@
       if (t === "comments" && !commentsLoaded) { commentsLoaded = true; loadComments(m, comPanel, ctx); }
     });
 
+    const rateTag = h("span", { class: "tag rate-tag hidden" });
+    const paintRateTag = (rt) => { const on = rt && rt.count > 0; rateTag.classList.toggle("hidden", !on); if (on) rateTag.replaceChildren(icon("star", "fill"), `${UI.fmtRate(rt.average)} (${rt.count})`); };
+    paintRateTag(m.rating);
+    const rateBox = soon ? null : UI.rateWidget(m, { initial: m.rating, onChange: (rt) => { paintRateTag(rt); rankCache.clear(); } });
+
     const statVal = (v, lbl) => h("div", { class: "stat" }, h("b", { text: v }), h("span", { text: lbl }));
     const cnt = statVal("0", T("stat_chapters"));
     const lastDate = chapters.length ? chapters[chapters.length - 1].published_at : m.updated_at;
@@ -312,12 +364,13 @@
       bg,
       h("div", { class: "m-head" }, h("div", { class: "tilt-wrap" }, cover(m)),
         h("div", { style: "min-width:0;flex:1" }, h("h2", { text: m.title }),
-          h("div", { class: "m-meta" }, soon ? h("span", { class: "tag warn", text: T("soon") }) : null, m.is_adult ? h("span", { class: "tag adult", text: T("adult_badge") }) : null,
+          h("div", { class: "m-meta" }, rateTag, soon ? h("span", { class: "tag warn", text: T("soon") }) : null, m.is_adult ? h("span", { class: "tag adult", text: T("adult_badge") }) : null,
             m.content_type ? h("span", { class: "tag", text: T("type_" + m.content_type) }) : null,
             m.chapters_count ? h("span", { class: "tag", text: m.chapters_count > 1 && m.first_chapter != null ? T("chapters_range", { a: num(m.first_chapter), b: num(m.last_chapter) }) : T("chapters") + " " + num(m.last_chapter || 1) }) : null, m.category ? h("span", { class: "tag", text: m.category.name }) : null,
             statusTag(m.status) ? h("span", { class: "tag " + (m.status === "completed" ? "ok" : "warn"), text: statusTag(m.status) }) : null))),
       soon ? null : h("div", { class: "stats reveal" }, cnt, statVal(statusTag(m.status) || "—", T("stat_status")), statVal(timeAgo(lastDate) || "—", T("stat_update"))),
       h("div", { class: "m-actions" }, cta, favBtn),
+      rateBox ? h("div", { style: "margin-top:14px" }, rateBox) : null,
       readCount ? h("div", { style: "margin-top:12px" }, h("div", { class: "progress" }, h("i", { style: `width:${Math.max(5, Math.round((readCount / chapters.length) * 100))}%` })),
         h("small", { class: "muted", text: T("read_progress", { a: readCount, b: chapters.length }) })) : null,
       h("section", { class: "section" }, descEl, more,
@@ -480,5 +533,5 @@
     S.render(S.page({ title: T("settings_title"), body }), { tab: "settings", silent: ctx.silent });
   }
 
-  Nexa.views = { home, browse, sainteCulture, adultGate, mangaPage, library, notifications, settings };
+  Nexa.views = { home, ranking, browse, sainteCulture, adultGate, mangaPage, library, notifications, settings };
 })();
