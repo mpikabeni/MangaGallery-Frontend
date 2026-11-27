@@ -55,7 +55,7 @@ href="css/mangas.css">
 <header class="topbar">
   <div class="page-title">
     <h1>Importer depuis les sites</h1>
-    <p>5 sources : une partie par site. MangaDex ajoute aussi les chapitres, les autres importent la fiche.</p>
+    <p>7 sources : une partie par site. MangaDex et Internet Archive ajoutent aussi les chapitres, les autres importent la fiche.</p>
   </div>
 </header>
 
@@ -65,6 +65,8 @@ href="css/mangas.css">
   <button type="button" class="source-tab" data-source="jikan"><b>MyAnimeList</b><small>via Jikan · fiche</small></button>
   <button type="button" class="source-tab" data-source="kitsu"><b>Kitsu</b><small>fiche</small></button>
   <button type="button" class="source-tab" data-source="mangaupdates"><b>MangaUpdates</b><small>fiche</small></button>
+  <button type="button" class="source-tab" data-source="internetarchive"><b>Internet Archive</b><small>BD libres · chapitre complet</small></button>
+  <button type="button" class="source-tab" data-source="googlebooks"><b>BD · Google Books</b><small>bandes dessinées · fiche</small></button>
 </nav>
 
 <section class="toolbar">
@@ -77,6 +79,9 @@ href="css/mangas.css">
     <select id="format" class="filter-select" aria-label="Origine">
       <option value="">Toutes origines</option><option value="manhwa">Manhwa (Corée)</option>
       <option value="manhua">Manhua (Chine)</option><option value="manga">Manga (Japon)</option>
+    </select>
+    <select id="bd-lang" class="filter-select bd-only hidden" aria-label="Langue des BD">
+      <option value="fr">BD en français</option><option value="en">BD en anglais</option><option value="all">Toutes les langues</option>
     </select>
     <select id="lang" class="filter-select mdx-only">
       <option value="fr">Chapitres en français (VF)</option><option value="en">Chapitres en anglais</option>
@@ -98,6 +103,8 @@ href="css/mangas.css">
 </section>
 <div class="coming-actions mdx-only"><button id="check-coming" class="secondary-button" type="button">Vérifier maintenant les titres « Bientôt » devenus complets</button></div>
 <p id="hidden-note" class="hidden-note hidden"></p>
+<div class="coming-actions"><button id="translate-old" class="secondary-button" type="button"><i data-lucide="languages"></i><span>Traduire en français les synopsis déjà importés</span></button></div>
+<p id="translate-note" class="hidden-note hidden"></p>
 
 <section class="notice" id="notice"></section>
 
