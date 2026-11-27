@@ -4,16 +4,19 @@
 const TYPE_LABELS = { manga: "Manga", webtoon: "Webtoon", comic: "Bande dessinée" };
 const TYPES = { normal: ["manga", "webtoon", "comic"], sainte_culture: ["webtoon", "comic"] };
 const STATUS = { ongoing: "En cours", completed: "Terminé", paused: "En pause" };
-const SYN = { vf: "synopsis VF", auto: "synopsis traduit automatiquement", en: "synopsis en anglais", none: "sans synopsis" };
+const SYN = { vf: "synopsis en français", auto: "synopsis traduit automatiquement en français", en: "synopsis NON traduit (service de traduction indisponible : utilise « Traduire en français les synopsis »)", none: "sans synopsis" };
 const state = { source: "mangadex", section: "normal", offset: 0, hasMore: false, total: 0, busy: false, token: 0, queue: [], running: false, auto: 0 };
 const SOURCES = {
   mangadex: { label: "MangaDex", site: "https://mangadex.org", text: "Fiche, couverture et chapitres. Les pages sont chargées depuis MangaDex à chaque lecture (rien n'est copié sur ton serveur). MangaDex et les groupes de traduction sont crédités dans l'application. Pas de publicité ni d'abonnement payant." },
   anilist: { label: "AniList", site: "https://anilist.co", text: "Catalogue très complet (manga, manhwa, manhua) avec filtre adulte. Importe la fiche : couverture, synopsis (traduit automatiquement en français), genres. Aucun chapitre : ajoute-les ensuite en PDF ou CBZ dans Chapitres." },
   jikan: { label: "MyAnimeList (Jikan)", site: "https://myanimelist.net", text: "Le plus grand catalogue, via l'API gratuite Jikan (limitée à ~3 requêtes par seconde : la recherche adulte prend un peu plus de temps). Importe la fiche uniquement, sans chapitres." },
   kitsu: { label: "Kitsu", site: "https://kitsu.app", text: "Catalogue communautaire. Kitsu n'a pas de filtre adulte pour les mangas : on lit son indicateur NSFW, la section adulte peut donc contenir peu de résultats. Importe la fiche uniquement." },
+  internetarchive: { label: "Internet Archive (BD libres)", site: "https://archive.org", text: "BD et comics AVEC leurs pages (CBZ ou PDF), téléchargés par ton serveur puis convertis en WebP. Seuls les livres sous licence libre explicite sont proposés : domaine public, CC0, CC BY et CC BY-SA (les licences NC / ND et les livres sans licence sont refusés). L'auteur et la licence sont affichés dans la fiche. Chaque livre = une fiche avec 1 chapitre. Pas de contenu adulte sur cette source." },
+  googlebooks: { label: "Google Books (BD)", site: "https://books.google.com", text: "Bandes dessinées (franco-belges, comics, romans graphiques) : fiche, couverture et auteurs. Google ne donne pas les pages : ajoute les chapitres ensuite en PDF ou CBZ. Les BD classées « adulte » par Google sont peu nombreuses : la recherche en La Sainte Culture renvoie donc peu de résultats." },
   mangaupdates: { label: "MangaUpdates", site: "https://www.mangaupdates.com", text: "Très bonne couverture des manhwa et webtoons, avec genres détaillés. Importe la fiche uniquement, sans chapitres." },
 };
 const isCat = () => state.source !== "mangadex";
+const isBD = () => state.source === "googlebooks" || state.source === "internetarchive";      // bandes dessinées: no manhwa / manhua / manga filter
 const MIN_VISIBLE = 8;          // keep loading the next results until at least this many valid titles are shown
 const $ = (id) => document.getElementById(id);
 const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
@@ -33,6 +36,8 @@ async function initializeImportPage() {
     applySource(); search(true);
   });
   $("format").addEventListener("change", () => search(true));
+  $("bd-lang").addEventListener("change", () => search(true));
+  $("translate-old").addEventListener("click", translateOld);
   applySource();
   $("go").addEventListener("click", () => search(true));
   $("q").addEventListener("keydown", (e) => { if (e.key === "Enter") search(true); });
@@ -74,6 +79,8 @@ function applySource() {
   const cat = isCat();
   document.querySelectorAll(".mdx-only").forEach((n) => n.classList.toggle("hidden", cat));
   document.querySelectorAll(".cat-only").forEach((n) => n.classList.toggle("hidden", !cat));
+  document.querySelectorAll(".bd-only").forEach((n) => n.classList.toggle("hidden", !isBD()));
+  $("format").classList.toggle("hidden", isBD());      // manhwa / manhua / manga does not apply to BD
   const src = SOURCES[state.source], box = $("notice");
   const a = el("a", null, src.label); a.href = src.site; a.target = "_blank"; a.rel = "noopener noreferrer";
   const strong = el("strong"); strong.append("Source : ", a, ". ");
@@ -129,16 +136,16 @@ function card(it) {
   const info = el("div");
   const title = el("h3", null, it.title);
   if (it.rating === "erotica" || it.rating === "pornographic") title.append(el("span", "badge18", "18+"));
-  const meta = el("div", "meta", [it.year, (it.genres || []).slice(0, 3).join(", ")].filter(Boolean).join(" · "));
+  const meta = el("div", "meta", [it.year, it.extra || (it.genres || []).slice(0, 3).join(", ")].filter(Boolean).join(" · "));
   const chips = el("div", "chips");
-  chips.append(el("span", "chip" + (it.status === "completed" ? " ok" : ""), STATUS[it.status] || it.status));
+  if (!isBD()) chips.append(el("span", "chip" + (it.status === "completed" ? " ok" : ""), STATUS[it.status] || it.status));
   const lang = $("lang").value;
   chips.append(el("span", "chip" + (it.has_lang_description ? " ok" : " warn"),
     it.has_lang_description ? "Synopsis VF ✓" : lang === "fr" && it.description_en ? "Synopsis : traduit auto à l'import" : "Pas de synopsis dans cette langue"));
   const desc = el("p", "desc", it.description || "Pas de description.");
   const count = el("div", "count loading", "Comptage des chapitres…");
 
-  const allowed = TYPES[state.section];
+  const allowed = isBD() ? ["comic"] : TYPES[state.section];
   const sel = el("select");
   allowed.forEach((t) => { const o = el("option", null, TYPE_LABELS[t]); o.value = t; sel.append(o); });
   sel.value = allowed.includes(it.type_guess) ? it.type_guess : allowed[0];
@@ -183,9 +190,11 @@ function card(it) {
 /* ---- the 4 metadata sites: no chapter counting, the card is shown right away */
 async function catalogSearch(reset, box, more) {
   const r = await api.get("/api/catalog/search", { source: state.source, q: $("q").value.trim(), section: state.section,
-    format: $("format").value, offset: state.offset });
+    format: isBD() ? "" : $("format").value, lang: $("bd-lang").value, offset: state.offset });
   if (reset) box.replaceChildren();
-  if (!r.items.length && reset) box.replaceChildren(note("Aucun résultat sur ce site. Essaie un autre titre, une autre origine, ou un autre site."));
+  if (!r.items.length && reset) box.replaceChildren(note(state.source === "internetarchive" && state.section !== "normal"
+    ? "Internet Archive n'a pas de BD adultes sous licence libre : passe en Galerie pour chercher sur cette source."
+    : "Aucun résultat sur ce site. Essaie un autre titre, une autre origine, ou un autre site."));
   r.items.forEach((it) => box.append(catalogCard(it)));
   state.offset = r.next; state.hasMore = !!r.has_more;
   more.classList.toggle("hidden", !state.hasMore);
@@ -203,30 +212,85 @@ function catalogCard(it) {
   const meta = el("div", "meta", [it.year, (it.genres || []).slice(0, 3).join(", ")].filter(Boolean).join(" · "));
   const chips = el("div", "chips");
   chips.append(el("span", "chip" + (it.status === "completed" ? " ok" : ""), STATUS[it.status] || it.status));
-  chips.append(el("span", "chip warn", "Fiche seulement · sans chapitres"));
+  if (it.readable) { chips.append(el("span", "chip ok", "Chapitre complet inclus")); chips.append(el("span", "chip", "Licence : " + it.licence)); }
+  else chips.append(el("span", "chip warn", "Fiche seulement · sans chapitres"));
   if (it.same_title) chips.append(el("span", "chip bad", "Même titre déjà dans ton catalogue"));
   const desc = el("p", "desc", it.description || "Pas de description.");
   const allowed = TYPES[state.section];
   const sel = el("select");
   allowed.forEach((t) => { const o = el("option", null, TYPE_LABELS[t]); o.value = t; sel.append(o); });
   sel.value = allowed.includes(it.type_guess) ? it.type_guess : allowed[0];
-  const btn = el("button", "primary-button", "Importer la fiche"); btn.type = "button";
+  const btn = el("button", "primary-button", it.readable ? "Importer la BD complète" : "Importer la fiche"); btn.type = "button";
   const row = el("div", "row"); row.append(sel, btn);
   const done = (msg, mangaId) => {
-    const a = el("a", "secondary-button", "Ajouter des chapitres"); a.href = `chapters.html?manga=${mangaId}`;
+    const a = el("a", "secondary-button", it.readable ? "Voir les chapitres" : "Ajouter des chapitres"); a.href = `chapters.html?manga=${mangaId}`;
     row.replaceChildren(el("span", "meta", msg), a);
   };
   if (it.imported_id) { btn.disabled = true; btn.textContent = "Déjà importé"; }
   const source = state.source, section = state.section;
+  let mangaId = null, synopsis = "none";             // kept so that "Réessayer" does not create the title twice
   btn.addEventListener("click", async () => {
-    btn.disabled = true; sel.disabled = true; btn.textContent = "Import en cours…";
+    btn.disabled = true; sel.disabled = true;
+    let pages = [];
     try {
-      const r = await api.post("/api/catalog/import", { source, id: it.id, section, content_type: sel.value, lang: "fr", visibility: $("visibility").value });
-      const msg = `Fiche importée · ${SYN[r.synopsis] || ""}${r.cover ? "" : " · sans couverture"} · ${r.visibility === "hidden" ? "masquée (brouillon)" : "dans « Bientôt »"}`;
-      showSuccess(`${it.title} : ${msg}.`);
-      done(msg, r.manga.id);
-    } catch (e) { console.error(e); showError(e.message || "Import impossible."); btn.disabled = false; sel.disabled = false; btn.textContent = "Réessayer"; }
+      if (!mangaId) {
+        btn.textContent = "Création de la fiche…";
+        const r = await api.post("/api/catalog/import", { source, id: it.id, section, content_type: sel.value, visibility: $("visibility").value });
+        mangaId = r.manga.id; synopsis = r.synopsis;
+        if (!it.readable) {
+          const msg = `Fiche importée · ${SYN[r.synopsis] || ""}${r.cover ? "" : " · sans couverture"} · ${r.visibility === "hidden" ? "masquée (brouillon)" : "dans « Bientôt »"}`;
+          showSuccess(`${it.title} : ${msg}.`); done(msg, mangaId); return;
+        }
+      }
+      btn.textContent = "Téléchargement du livre…";
+      const start = await api.post("/api/uploads/fetch", { identifier: it.id });
+      const job = await pollJob(start.job_id, (n) => { btn.textContent = n ? `Conversion… ${n} page(s)` : "Téléchargement et conversion…"; });
+      pages = job.pages || [];
+      await api.post("/api/chapters", { manga_id: mangaId, number: 1, status: "published", visibility: $("visibility").value, pages });
+      const msg = `BD importée · ${job.count} page(s) · ${SYN[synopsis] || ""}`;
+      showSuccess(`${it.title} : ${msg}.`); done(msg, mangaId);
+    } catch (e) {
+      console.error(e); showError(e.message || "Import impossible.");
+      if (pages.length) api.post("/api/uploads/discard", { urls: pages }).catch(() => {});      // converted but the chapter was not saved
+      btn.disabled = false; sel.disabled = !!mangaId; btn.textContent = "Réessayer";
+    }
   });
   info.append(title, meta, chips, desc, row); c.append(img, info);
   return c;
+}
+
+/* Translate the synopses already in the catalogue: a few titles per call until the server says it is done. */
+async function translateOld() {
+  const btn = $("translate-old"), note = $("translate-note");
+  btn.disabled = true; note.classList.remove("hidden");
+  let after = 0, translated = 0, skipped = 0;
+  try {
+    for (;;) {
+      note.textContent = `Traduction en cours… ${translated} synopsis traduit(s)`;
+      const r = await api.post("/api/catalog/translate-synopses", { after_id: after });
+      translated += r.translated; skipped += r.skipped; after = r.next_after;
+      if (r.failed) {
+        note.textContent = `Arrêté après ${translated} synopsis : le service de traduction ne répond plus ou son quota du jour est atteint. Pour un quota large et une meilleure qualité, ajoute la variable DEEPL_API_KEY (clé gratuite DeepL) sur Render, puis relance.`;
+        showError("Traduction interrompue : service indisponible ou quota atteint."); return;
+      }
+      if (r.done) break;
+    }
+    note.textContent = `Terminé : ${translated} synopsis traduit(s), ${skipped} déjà en français.`;
+    showSuccess(note.textContent);
+  } catch (e) { console.error(e); showError(e.message || "Traduction impossible."); }
+  finally { btn.disabled = false; if (window.lucide) window.lucide.createIcons(); }
+}
+
+/* waits for a server job (download + conversion) and returns it when done */
+async function pollJob(jobId, onTick) {
+  let fails = 0;
+  for (;;) {
+    await new Promise((r) => setTimeout(r, 2000));
+    let job;
+    try { job = await api.get(`/api/uploads/jobs/${jobId}`); fails = 0; }
+    catch (e) { if (++fails >= 6) throw new Error("Le serveur ne répond plus. Réessaie dans un instant."); continue; }
+    if (job.status === "done") return job;
+    if (job.status === "error") throw new Error(job.error || "Le traitement a échoué.");
+    onTick(job.done);
+  }
 }
